@@ -6,6 +6,12 @@
  * Target look: camera pitch ~55°, violet-black base, pink-violet moon glow,
  * teal fog, orange torch lights, slate tombstone bumpers, coffin slingshots,
  * floating arched ghost portraits with bobbing animation.
+ *
+ * Gate 2 Updates:
+ * - Multiball 3D ball mesh pool (rendering multiple balls simultaneously)
+ * - 3D illuminated C-H-O-G rollover lanes (glowing amber when lit)
+ * - 3D rotating Crypt Portal vortex ring & light
+ * - Ghost targets Reunion golden/emerald halo and banished visual state
  */
 
 import * as THREE from 'three';
@@ -20,10 +26,14 @@ export class Three3DRenderer {
   private camera: THREE.PerspectiveCamera;
   private renderer: THREE.WebGLRenderer;
   private ballMesh: THREE.Mesh;
+  private extraBallMeshes: THREE.Mesh[] = [];
   private leftFlipperMesh: THREE.Group;
   private rightFlipperMesh: THREE.Group;
   private bumperMeshes: Map<string, { group: THREE.Group; mat: THREE.MeshStandardMaterial }> = new Map();
-  private ghostMeshes: Map<string, { group: THREE.Group; light: THREE.PointLight; baseY: number }> = new Map();
+  private ghostMeshes: Map<string, { group: THREE.Group; light: THREE.PointLight; frame: THREE.Mesh; baseY: number }> = new Map();
+  private rolloverMeshes: Map<string, { mesh: THREE.Mesh; mat: THREE.MeshStandardMaterial }> = new Map();
+  private cryptVortexMesh: THREE.Mesh | null = null;
+  private cryptLight: THREE.PointLight | null = null;
   private torchLights: THREE.PointLight[] = [];
   private timeSec = 0;
   private isLiteTier = false;
@@ -40,12 +50,11 @@ export class Three3DRenderer {
     // ── 1. Scene & Fog ──
     this.scene = new THREE.Scene();
     this.scene.background = new THREE.Color(0x08060f);
-    this.scene.fog = new THREE.FogExp2(0x0d091a, 0.45); // Teal/purple ambient fog
+    this.scene.fog = new THREE.FogExp2(0x0d091a, 0.45);
 
     // ── 2. Camera: Pitch ~55° ──
     const aspect = container.clientWidth / container.clientHeight;
     this.camera = new THREE.PerspectiveCamera(48, aspect, 0.1, 50);
-    // Table is centered at [0, 0, 0]. Z is length (-1.0 to +1.0), X is width (-0.5 to +0.5), Y is height.
     this.camera.position.set(0, 1.85, 1.30);
     this.camera.lookAt(0, 0, 0.05);
 
@@ -58,16 +67,13 @@ export class Three3DRenderer {
     container.appendChild(this.renderer.domElement);
 
     // ── 4. Lights ──
-    // Ambient deep violet
     const ambient = new THREE.AmbientLight(0x2e1065, 0.8);
     this.scene.add(ambient);
 
-    // Moonlit pink-violet rim directional light
     const moonRim = new THREE.DirectionalLight(0xe879f9, 1.4);
     moonRim.position.set(-2, 4, -2);
     this.scene.add(moonRim);
 
-    // Orange torch point lights
     const torchLeft = new THREE.PointLight(0xf97316, 2.2, 2.0);
     torchLeft.position.set(-0.35, 0.15, 0.7);
     this.scene.add(torchLeft);
@@ -86,7 +92,7 @@ export class Three3DRenderer {
     // ── 5. Playfield Geometry ──
     this.buildPlayfield();
 
-    // ── 6. Ball Mesh ──
+    // ── 6. Primary Ball Mesh ──
     const ballGeo = new THREE.SphereGeometry(this.layout.ball.radius, 24, 24);
     const ballMat = new THREE.MeshStandardMaterial({
       color: 0xf8fafc,
@@ -105,10 +111,12 @@ export class Three3DRenderer {
     this.scene.add(this.leftFlipperMesh);
     this.scene.add(this.rightFlipperMesh);
 
-    // ── 8. Bumpers & Slingshots & Ghosts ──
+    // ── 8. Bumpers, Slingshots, Ghosts, Rollovers, Crypt ──
     this.buildBumpers();
     this.buildSlingshots();
     this.buildGhosts();
+    this.buildRollovers();
+    this.buildCryptPortal();
 
     window.addEventListener('resize', this.onResize);
   }
@@ -127,7 +135,6 @@ export class Three3DRenderer {
   }
 
   private buildPlayfield() {
-    // Felt surface
     const feltGeo = new THREE.PlaneGeometry(1.0, 2.0);
     const feltMat = new THREE.MeshStandardMaterial({
       color: 0x120d20,
@@ -161,7 +168,7 @@ export class Three3DRenderer {
     );
     this.scene.add(archLine);
 
-    // Outer Walls (Left, Right, Inner)
+    // Outer Walls
     const wallMat = new THREE.MeshStandardMaterial({ color: 0x3b1c6e, roughness: 0.5 });
     const addWallMesh = (from: [number, number], to: [number, number]) => {
       const p1 = this.to3D(from[0], from[1], 0.03);
@@ -187,7 +194,6 @@ export class Three3DRenderer {
     const pivot = this.to3D(spec.pivot[0], spec.pivot[1], 0.02);
     group.position.copy(pivot);
 
-    // Low-poly tapered rounded flipper mesh
     const shape = new THREE.Shape();
     const len = spec.length;
     const rBase = spec.baseRadius;
@@ -206,7 +212,7 @@ export class Three3DRenderer {
       bevelSize: 0.002,
       bevelThickness: 0.002,
     });
-    extrudeGeo.rotateX(Math.PI / 2); // Lay flat on XZ plane
+    extrudeGeo.rotateX(Math.PI / 2);
 
     const flipperMat = new THREE.MeshStandardMaterial({
       color: 0x8b5cf6,
@@ -226,7 +232,6 @@ export class Three3DRenderer {
       const pos = this.to3D(b.x, b.y, 0.02);
       group.position.copy(pos);
 
-      // Slate tombstone shape (cylinder base + beveled cap)
       const geo = new THREE.CylinderGeometry(b.radius, b.radius * 1.05, 0.045, 16);
       const mat = new THREE.MeshStandardMaterial({
         color: 0x27272a,
@@ -238,51 +243,48 @@ export class Three3DRenderer {
       mesh.position.y = 0.022;
       group.add(mesh);
 
-      // Top glowing rune
-      const capGeo = new THREE.CylinderGeometry(b.radius * 0.7, b.radius * 0.7, 0.005, 16);
-      const capMat = new THREE.MeshBasicMaterial({ color: 0xf97316 });
-      const cap = new THREE.Mesh(capGeo, capMat);
-      cap.position.y = 0.046;
-      group.add(cap);
-
       this.scene.add(group);
       this.bumperMeshes.set(b.id, { group, mat });
     });
   }
 
   private buildSlingshots() {
+    const mat = new THREE.MeshStandardMaterial({
+      color: 0x6d28d9,
+      emissive: 0x4c1d95,
+      roughness: 0.4,
+    });
+
     this.layout.slingshots.forEach((s) => {
       const shape = new THREE.Shape();
-      const verts = s.verts.map((v) => this.to3D(v[0], v[1]));
-      shape.moveTo(verts[0].x, verts[0].z);
-      for (let i = 1; i < verts.length; i++) shape.lineTo(verts[i].x, verts[i].z);
+      const p0 = this.to3D(s.verts[0][0], s.verts[0][1]);
+      shape.moveTo(p0.x, -p0.z);
+      for (let i = 1; i < s.verts.length; i++) {
+        const p = this.to3D(s.verts[i][0], s.verts[i][1]);
+        shape.lineTo(p.x, -p.z);
+      }
       shape.closePath();
 
-      const geo = new THREE.ExtrudeGeometry(shape, { depth: 0.035, bevelEnabled: false });
-      geo.rotateX(Math.PI / 2);
-      const mat = new THREE.MeshStandardMaterial({
-        color: 0x4c1d95,
-        emissive: 0x2e1065,
-        roughness: 0.5,
-      });
-      const mesh = new THREE.Mesh(geo, mat);
-      mesh.position.y = 0.015;
+      const extrudeGeo = new THREE.ExtrudeGeometry(shape, { depth: 0.04 });
+      extrudeGeo.rotateX(Math.PI / 2);
+      const mesh = new THREE.Mesh(extrudeGeo, mat);
       this.scene.add(mesh);
     });
   }
 
   private buildGhosts() {
     const textureLoader = new THREE.TextureLoader();
+
     this.layout.ghostTargets.forEach((gt) => {
       const group = new THREE.Group();
-      const pos = this.to3D(gt.x, gt.y, 0.07);
+      const pos = this.to3D(gt.x, gt.y, 0.06);
       group.position.copy(pos);
 
       // Glowing arched torus frame
       const frameGeo = new THREE.TorusGeometry(gt.radius, 0.006, 8, 24);
       const frameMat = new THREE.MeshBasicMaterial({ color: 0x06b6d4 });
       const frameMesh = new THREE.Mesh(frameGeo, frameMat);
-      frameMesh.rotation.x = -0.5; // Tilts toward camera
+      frameMesh.rotation.x = -0.5;
       group.add(frameMesh);
 
       // Portrait texture
@@ -297,45 +299,145 @@ export class Three3DRenderer {
         });
       }
 
-      // Floating cyan point light
+      // Floating point light
       const gLight = new THREE.PointLight(0x06b6d4, 1.2, 0.6);
       gLight.position.set(0, 0.05, 0);
       group.add(gLight);
 
       this.scene.add(group);
-      this.ghostMeshes.set(gt.id, { group, light: gLight, baseY: pos.y });
+      this.ghostMeshes.set(gt.id, { group, light: gLight, frame: frameMesh, baseY: pos.y });
     });
+  }
+
+  private buildRollovers() {
+    const rl = this.layout.rolloverLanes;
+    const dividerMat = new THREE.MeshStandardMaterial({ color: 0x581c87, roughness: 0.6 });
+
+    // Dividers
+    rl.dividerX.forEach((dx) => {
+      const p1 = this.to3D(dx, rl.y0, 0.015);
+      const p2 = this.to3D(dx, rl.y1, 0.015);
+      const dist = p1.distanceTo(p2);
+      const boxGeo = new THREE.BoxGeometry(0.008, 0.03, dist);
+      const mesh = new THREE.Mesh(boxGeo, dividerMat);
+      mesh.position.copy(p1).lerp(p2, 0.5);
+      this.scene.add(mesh);
+    });
+
+    // 3D Neon Letter Markers for C, H, O, G
+    rl.letters.forEach((letter, i) => {
+      const lx = (rl.dividerX[i] + rl.dividerX[i + 1]) / 2;
+      const ly = (rl.y0 + rl.y1) / 2;
+      const pos = this.to3D(lx, ly, 0.008);
+
+      const canvas = document.createElement('canvas');
+      canvas.width = 64;
+      canvas.height = 64;
+      const ctx = canvas.getContext('2d')!;
+      ctx.fillStyle = '#000000';
+      ctx.fillRect(0, 0, 64, 64);
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 44px monospace';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(letter, 32, 32);
+
+      const tex = new THREE.CanvasTexture(canvas);
+      const mat = new THREE.MeshStandardMaterial({
+        map: tex,
+        emissive: 0x581c87,
+        emissiveIntensity: 0.3,
+        roughness: 0.5,
+      });
+
+      const planeGeo = new THREE.PlaneGeometry(0.05, 0.05);
+      const mesh = new THREE.Mesh(planeGeo, mat);
+      mesh.rotation.x = -Math.PI / 2;
+      mesh.position.copy(pos);
+
+      this.scene.add(mesh);
+      this.rolloverMeshes.set(letter, { mesh, mat });
+    });
+  }
+
+  private buildCryptPortal() {
+    const cp = this.layout.cryptPortal;
+    const pos = this.to3D(cp.x, cp.y, 0.015);
+
+    // Vortex Torus Ring
+    const torusGeo = new THREE.TorusGeometry(cp.radius * 0.9, 0.008, 8, 24);
+    const torusMat = new THREE.MeshStandardMaterial({
+      color: 0x10b981,
+      emissive: 0x34d399,
+      emissiveIntensity: 1.5,
+      roughness: 0.2,
+    });
+    const torus = new THREE.Mesh(torusGeo, torusMat);
+    torus.rotation.x = -Math.PI / 2;
+    torus.position.copy(pos);
+    this.scene.add(torus);
+    this.cryptVortexMesh = torus;
+
+    // Green/Amber Portal Point Light
+    const pLight = new THREE.PointLight(0x34d399, 1.5, 0.8);
+    pLight.position.copy(pos).add(new THREE.Vector3(0, 0.05, 0));
+    this.scene.add(pLight);
+    this.cryptLight = pLight;
   }
 
   render(physics: PhysicsWorldInstance, state: GameVisualState) {
     this.timeSec += 1 / 60;
     const now = Date.now();
 
-    // ── FPS Monitor & Tier Drop ──
+    // ── FPS Monitor ──
     this.frameCount++;
     if (this.timeSec - this.fpsTimer >= 1.0) {
       this.currentFps = this.frameCount / (this.timeSec - this.fpsTimer);
       this.frameCount = 0;
       this.fpsTimer = this.timeSec;
 
-      // Drop to lite tier if FPS < 45
       if (this.currentFps < 45 && !this.isLiteTier) {
         this.isLiteTier = true;
         this.torchLights.forEach((l) => (l.intensity = 0.8));
       }
     }
 
-    // ── Update Ball Position ──
-    const bPos = physics.getBallState();
-    this.ballMesh.position.set(
-      bPos.x - 0.5,
-      this.layout.ball.radius,
-      bPos.y - 1.0
-    );
+    // ── Update Primary Ball Position ──
+    const allBalls = physics.getAllBallStates ? physics.getAllBallStates() : [physics.getBallState()];
+    const pBall = allBalls[0];
+    if (pBall) {
+      this.ballMesh.position.set(pBall.x - 0.5, this.layout.ball.radius, pBall.y - 1.0);
+    }
+
+    // ── Update Multiball Extra Ball Meshes ──
+    const extraCount = allBalls.length - 1;
+    while (this.extraBallMeshes.length < extraCount) {
+      const extraGeo = new THREE.SphereGeometry(this.layout.ball.radius, 16, 16);
+      const extraMat = new THREE.MeshStandardMaterial({
+        color: 0xfbbf24,
+        metalness: 0.8,
+        roughness: 0.2,
+        emissive: 0xf59e0b,
+        emissiveIntensity: 0.6,
+      });
+      const mesh = new THREE.Mesh(extraGeo, extraMat);
+      this.scene.add(mesh);
+      this.extraBallMeshes.push(mesh);
+    }
+
+    for (let i = 0; i < this.extraBallMeshes.length; i++) {
+      const extraMesh = this.extraBallMeshes[i];
+      if (i < extraCount) {
+        const extraPos = allBalls[i + 1];
+        extraMesh.visible = true;
+        extraMesh.position.set(extraPos.x - 0.5, this.layout.ball.radius, extraPos.y - 1.0);
+      } else {
+        extraMesh.visible = false;
+      }
+    }
 
     // ── Update Flippers ──
     const angles = physics.getFlipperAnglesDeg();
-    // In Three.js, rotation around Y axis matches angle in radians
     this.leftFlipperMesh.rotation.y = -(angles.left * Math.PI) / 180;
     this.rightFlipperMesh.rotation.y = -(angles.right * Math.PI) / 180;
 
@@ -346,14 +448,42 @@ export class Three3DRenderer {
       bm.group.scale.setScalar(isHit ? 1.15 : 1.0);
     });
 
-    // ── Ghost Targets Sinusoidal Bobbing ──
+    // ── Rollover Lanes Illumination ──
+    this.rolloverMeshes.forEach((rm, letter) => {
+      const isLit = state.rolloversLit.has(letter);
+      rm.mat.emissive.setHex(isLit ? 0xffaa00 : 0x581c87);
+      rm.mat.emissiveIntensity = isLit ? 2.5 : 0.2;
+    });
+
+    // ── Crypt Portal Vortex Rotation ──
+    if (this.cryptVortexMesh) {
+      this.cryptVortexMesh.rotation.z += state.cryptHeld ? 0.12 : 0.03;
+      if (this.cryptLight) {
+        this.cryptLight.color.setHex(state.cryptHeld ? 0xfacc15 : 0x34d399);
+        this.cryptLight.intensity = state.cryptHeld ? 3.0 : 1.5;
+      }
+    }
+
+    // ── Ghost Targets Sinusoidal Bobbing & Reunion States ──
     this.ghostMeshes.forEach((gm, gid) => {
       const bob = 0.012 * Math.sin(this.timeSec * 3 + gm.group.position.x * 5);
       gm.group.position.y = gm.baseY + bob;
 
-      const hits = state.ghostDamage.get(gid) ?? 0;
-      if (hits >= 3) {
+      const isReunion = state.reunionActive && state.reunionGhostId === gid;
+      const isBanished = state.banishedGhosts.has(gid);
+
+      if (isReunion) {
         gm.light.color.setHex(0x10b981);
+        gm.light.intensity = 2.5;
+        (gm.frame.material as THREE.MeshBasicMaterial).color.setHex(0x10b981);
+      } else if (isBanished) {
+        gm.light.color.setHex(0xa855f7);
+        gm.light.intensity = 1.2;
+        (gm.frame.material as THREE.MeshBasicMaterial).color.setHex(0xa855f7);
+      } else {
+        gm.light.color.setHex(0x06b6d4);
+        gm.light.intensity = 1.2;
+        (gm.frame.material as THREE.MeshBasicMaterial).color.setHex(0x06b6d4);
       }
     });
 
@@ -366,6 +496,7 @@ export class Three3DRenderer {
 
   destroy() {
     window.removeEventListener('resize', this.onResize);
+    this.extraBallMeshes.forEach((m) => this.scene.remove(m));
     this.renderer.dispose();
   }
 }

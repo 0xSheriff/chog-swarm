@@ -1,26 +1,27 @@
 'use client';
 
 /**
- * /play — Chog Swarm: Haunted Pinball (Gate 1 Redo)
+ * /play — Chog Swarm: Haunted Pinball (Gate 2)
  *
- * Built strictly from /docs/pinball/table-layout.json.
- * Zero hardcoded dimensions.
+ * Built strictly from /docs/pinball/table-layout.json. Zero hardcoded dimensions.
  *
- * Features:
- * - Debug View toggled with 'D' key (renders all colliders on dark unit grid)
- * - 3D Three.js WebGL2 renderer (pitch ~55°, moonlit rim light, teal fog, torches)
- * - 2D Flat Canvas renderer available via ?renderer=2d or UI toggle
- * - Fixed 120 Hz Planck.js physics with speed cap, bumper/slingshot kicks, gate, stuck rescue
- * - Real Ghost Chog portraits for g1 to g4 (Blaze, Burning Skully, Chog Scream, Chogbomination)
- * - Large Top-Center HUD with Haunt power meter and event callout banner
- * - Soul Ball vs Guest Spirit side-by-side selection
+ * Gate 2 Features:
+ * - Rollover lanes spelling C-H-O-G (completing them raises the multiplier 1x -> 2x -> 3x -> 5x)
+ * - 4 Ghost targets: 3 hits banishes a ghost for big points, added to Haunted Hall codex.
+ *   Live ownerOf verification triggers REUNION (friendly ghost, 10s power, 2x points).
+ * - Crypt portal into short bonus lane (hold & eject toward pop bumpers).
+ * - Multiball lock: 3 souls locked in crypt portal activates 3-ball Multiball chaos!
+ * - 3 balls per game cycle with Game Over screen and Haunted Hall codex links.
+ * - Dot-Matrix Display (DMD): Amber phosphor LED arcade screen with scanlines, live multiplier & score.
+ * - Zero-latency Web Audio sound effects for all pinball components with mute control.
  */
 
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useRef, useState, useCallback, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import { useAccount } from 'wagmi';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
-import { Sparkles, Shield, Zap, RefreshCw, Eye } from 'lucide-react';
+import { Sparkles, Shield, Zap, RefreshCw, Eye, Ghost, Award, Play, Flame, Trophy } from 'lucide-react';
 
 import { TableLayout } from '@/packages/physics/src/types';
 import { loadTableLayout } from '@/packages/physics/src/layout-loader';
@@ -28,6 +29,9 @@ import { createPhysicsWorld, PhysicsWorldInstance, FIXED_DT } from '@/packages/p
 import { renderDebugView } from '@/packages/physics/src/debug-renderer';
 import { Flat2DRenderer, GameVisualState, GHOST_CHOGS } from '@/packages/physics/src/flat-2d-renderer';
 import { Three3DRenderer } from '@/packages/physics/src/three-3d-renderer';
+import { DMDDisplay } from '@/components/dmd-display';
+import { sound } from '@/lib/audio';
+import { verifyChogOwnershipOnChain } from '@/lib/monad-chain';
 
 interface OwnedChog {
   tokenId: number;
@@ -54,9 +58,17 @@ function PlayPageContent() {
 
   // Gameplay State
   const [score, setScore] = useState(0);
+  const [multiplier, setMultiplier] = useState(1);
   const [ballsRemaining, setBallsRemaining] = useState(3);
+  const [activeBallCount, setActiveBallCount] = useState(1);
   const [hauntPower, setHauntPower] = useState(0); // 0..100
-  const [bannerMsg, setBannerMsg] = useState('PRESS SPACE OR HOLD PLUNGER TO LAUNCH');
+  const [dmdMsg, setDmdMsg] = useState('PULL PLUNGER TO LAUNCH (SPACE OR DRAG)');
+  const [rolloversLit, setRolloversLit] = useState<Set<string>>(new Set());
+  const [lockCount, setLockCount] = useState(0);
+  const [multiballActive, setMultiballActive] = useState(false);
+  const [reunionActive, setReunionActive] = useState(false);
+  const [reunionGhostId, setReunionGhostId] = useState<string | undefined>(undefined);
+  const [banishedGhosts, setBanishedGhosts] = useState<Set<string>>(new Set());
   const [fpsDisplay, setFpsDisplay] = useState(60);
 
   // DOM Refs
@@ -71,12 +83,18 @@ function PlayPageContent() {
 
   const visualStateRef = useRef<GameVisualState>({
     score: 0,
+    multiplier: 1,
     ballsRemaining: 3,
+    activeBallCount: 1,
     hauntPower01: 0,
     soulBallName: 'Guest Spirit',
     bumperFlash: new Map(),
     slingshotFlash: new Map(),
     ghostDamage: new Map(),
+    banishedGhosts: new Set(),
+    reunionActive: false,
+    multiballActive: false,
+    cryptHeld: false,
     rolloversLit: new Set(),
     plungerCharge: 0,
   });
@@ -118,10 +136,20 @@ function PlayPageContent() {
     if (!layout) return;
     setSelectedChog(chog);
     setScore(0);
+    setMultiplier(1);
     setBallsRemaining(3);
+    setActiveBallCount(1);
     setHauntPower(0);
-    setBannerMsg('PRESS SPACE OR HOLD PLUNGER TO LAUNCH');
+    setLockCount(0);
+    setMultiballActive(false);
+    setReunionActive(false);
+    setReunionGhostId(undefined);
+    setBanishedGhosts(new Set());
+    setRolloversLit(new Set());
+    setDmdMsg('PULL PLUNGER TO LAUNCH (SPACE OR DRAG)');
     setGamePhase('playing');
+
+    sound.startAmbient();
 
     // Create fresh physics world from JSON
     const pWorld = createPhysicsWorld(layout);
@@ -129,58 +157,219 @@ function PlayPageContent() {
 
     const vs = visualStateRef.current;
     vs.score = 0;
+    vs.multiplier = 1;
     vs.ballsRemaining = 3;
+    vs.activeBallCount = 1;
     vs.hauntPower01 = 0;
     vs.soulBallName = chog ? chog.name : 'Guest Spirit';
     vs.soulBallImage = chog ? chog.image : undefined;
     vs.bumperFlash.clear();
     vs.slingshotFlash.clear();
     vs.ghostDamage.clear();
+    vs.banishedGhosts.clear();
     vs.rolloversLit.clear();
+    vs.reunionActive = false;
+    vs.reunionGhostId = undefined;
+    vs.multiballActive = false;
+    vs.cryptHeld = false;
     vs.plungerCharge = 0;
 
-    // Contact hooks
+    // ── 1. Pop Bumper Hit ──
     pWorld.onBumperHit = (id, pts) => {
-      vs.score += pts;
+      sound.playBumper();
+      const mult = vs.multiplier * (vs.reunionActive ? 2 : 1) * (vs.multiballActive ? 3 : 1);
+      const earned = pts * mult;
+      vs.score += earned;
       setScore(vs.score);
       vs.bumperFlash.set(id, Date.now() + 150);
       setHauntPower((prev) => Math.min(100, prev + 5));
-      setBannerMsg(`TOMBSTONE RIP HIT! +${pts}`);
+      setDmdMsg(`TOMBSTONE RIP HIT! +${earned}`);
     };
 
+    // ── 2. Slingshot Hit ──
     pWorld.onSlingshotHit = (id) => {
-      vs.score += 50;
+      sound.playSlingshot();
+      const mult = vs.multiplier * (vs.reunionActive ? 2 : 1);
+      const earned = 50 * mult;
+      vs.score += earned;
       setScore(vs.score);
       vs.slingshotFlash.set(id, Date.now() + 120);
-      setBannerMsg('COFFIN SLINGSHOT KICK! +50');
+      setDmdMsg(`COFFIN SLINGSHOT KICK! +${earned}`);
     };
 
-    pWorld.onGhostHit = (id) => {
-      const current = vs.ghostDamage.get(id) || 0;
-      vs.ghostDamage.set(id, current + 1);
-      const ghostInfo = GHOST_CHOGS[id];
-      const pts = 250 * (current + 1);
-      vs.score += pts;
+    // ── 3. Rollover Lane Hit (C-H-O-G) ──
+    pWorld.onRolloverHit = (letter) => {
+      if (!vs.rolloversLit.has(letter)) {
+        sound.playRollover(letter);
+        vs.rolloversLit.add(letter);
+        setRolloversLit(new Set(vs.rolloversLit));
+
+        const earned = 200 * vs.multiplier;
+        vs.score += earned;
+        setScore(vs.score);
+
+        // Check if all 4 letters are lit
+        if (vs.rolloversLit.size === 4) {
+          sound.playChogCompleted();
+          const nextMult = vs.multiplier === 1 ? 2 : vs.multiplier === 2 ? 3 : 5;
+          vs.multiplier = nextMult;
+          setMultiplier(nextMult);
+
+          const bonus = 3000 * nextMult;
+          vs.score += bonus;
+          setScore(vs.score);
+          vs.rolloversLit.clear();
+          setRolloversLit(new Set());
+
+          setDmdMsg(`★ C-H-O-G COMPLETE! MULTIPLIER NOW ${nextMult}X (+${bonus}) ★`);
+        } else {
+          setDmdMsg(`LANE [${letter}] LIT! +${earned}`);
+        }
+      }
+    };
+
+    // ── 4. Crypt Portal (Hold & Eject) ──
+    pWorld.onCryptEnter = () => {
+      sound.playCryptPortal();
+      vs.cryptHeld = true;
+
+      const earned = 500 * vs.multiplier * (vs.reunionActive ? 2 : 1);
+      vs.score += earned;
       setScore(vs.score);
-      setHauntPower((prev) => Math.min(100, prev + 15));
-      setBannerMsg(`GHOST CHOG HIT (${ghostInfo?.name || id})! +${pts}`);
+
+      setLockCount((prevLock) => {
+        const nextLock = prevLock + 1;
+        if (nextLock >= 3) {
+          // Multiball Trigger!
+          sound.playMultiballAlarm();
+          vs.multiballActive = true;
+          setMultiballActive(true);
+
+          // Spawn 2 extra balls
+          pWorld.spawnBall(layout.cryptPortal.x - 0.05, layout.cryptPortal.y + 0.05, -0.3, 2.6);
+          pWorld.spawnBall(layout.cryptPortal.x + 0.05, layout.cryptPortal.y + 0.05, 0.3, 2.6);
+          setActiveBallCount(3);
+          vs.activeBallCount = 3;
+
+          setDmdMsg(`🔥🔥 MULTIBALL ACTIVATED! 3-BALL CHAOS TRIPLES JACKPOT 🔥🔥`);
+          return 0;
+        } else {
+          setDmdMsg(`★ SOUL CAPTURED! LOCK ${nextLock}/3 (+${earned}) ★`);
+          return nextLock;
+        }
+      });
     };
 
+    pWorld.onCryptEject = () => {
+      vs.cryptHeld = false;
+    };
+
+    // ── 5. Ghost Target Hit & Reunion Check ──
+    pWorld.onGhostHit = async (gid) => {
+      const ghostInfo = GHOST_CHOGS[gid];
+      if (!ghostInfo) return;
+
+      // Check on-chain Reunion if wallet connected
+      let isOwner = false;
+      if (address) {
+        try {
+          const res = await verifyChogOwnershipOnChain(address, ghostInfo.id);
+          isOwner = res.verified;
+        } catch (_) {
+          isOwner = false;
+        }
+      }
+
+      if (isOwner && !vs.reunionActive) {
+        // Trigger Reunion!
+        sound.playReunion();
+        vs.reunionActive = true;
+        vs.reunionGhostId = gid;
+        setReunionActive(true);
+        setReunionGhostId(gid);
+        setDmdMsg(`❤️ REUNION! ${ghostInfo.name} RECOGNIZED MASTER! 2X SCORE FOR 10S ❤️`);
+
+        // Record in codex
+        fetch('/api/haunted-hall', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ address, ghostId: gid, action: 'reunion' }),
+        }).catch(() => {});
+
+        setTimeout(() => {
+          vs.reunionActive = false;
+          vs.reunionGhostId = undefined;
+          setReunionActive(false);
+          setReunionGhostId(undefined);
+          setDmdMsg('REUNION EXPIRED — MULTIPLIER NORMALIZED');
+        }, 10000);
+      } else {
+        // Standard Ghost Hit
+        const currentHits = vs.ghostDamage.get(gid) || 0;
+        const newHits = currentHits + 1;
+        vs.ghostDamage.set(gid, newHits);
+        sound.playGhostHit(newHits);
+
+        const mult = vs.multiplier * (vs.reunionActive ? 2 : 1) * (vs.multiballActive ? 3 : 1);
+        const earned = 350 * newHits * mult;
+        vs.score += earned;
+        setScore(vs.score);
+        setHauntPower((prev) => Math.min(100, prev + 15));
+
+        if (newHits >= 3 && !vs.banishedGhosts.has(gid)) {
+          // Banish Ghost!
+          sound.playGhostBanished();
+          vs.banishedGhosts.add(gid);
+          setBanishedGhosts(new Set(vs.banishedGhosts));
+
+          const banishBonus = 5000 * mult;
+          vs.score += banishBonus;
+          setScore(vs.score);
+          setDmdMsg(`👻 GHOST BANISHED! SEALED IN HAUNTED HALL (+${banishBonus}) 👻`);
+
+          // Record in codex
+          fetch('/api/haunted-hall', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ address, ghostId: gid, action: 'banish', score: vs.score }),
+          }).catch(() => {});
+        } else {
+          setDmdMsg(`GHOST HIT (${ghostInfo.name}) ${newHits}/3! +${earned}`);
+        }
+      }
+    };
+
+    // ── 6. Multiball Extra Ball Drain ──
+    pWorld.onExtraBallDrain = (remaining) => {
+      setActiveBallCount(remaining);
+      vs.activeBallCount = remaining;
+      if (remaining === 1) {
+        vs.multiballActive = false;
+        setMultiballActive(false);
+        setDmdMsg('MULTIBALL ENDED — 1 BALL IN PLAY');
+      } else {
+        setDmdMsg(`MULTIBALL: ${remaining} BALLS IN PLAY`);
+      }
+    };
+
+    // ── 7. Primary Ball Drain ──
     pWorld.onDrain = () => {
+      sound.playDrain();
       vs.ballsRemaining -= 1;
       setBallsRemaining(vs.ballsRemaining);
       if (vs.ballsRemaining <= 0) {
         setGamePhase('gameover');
-        setBannerMsg('GAME OVER — ALL BALLS DRAINED');
+        sound.stopAmbient();
+        setDmdMsg('GAME OVER — ALL BALLS DRAINED');
       } else {
-        setBannerMsg(`BALL LOST! ${vs.ballsRemaining} BALLS REMAIN`);
+        setDmdMsg(`BALL LOST! BALL ${4 - vs.ballsRemaining} OF 3 — PULL PLUNGER`);
         pWorld.resetBall();
         controlsRef.current.plungerCharge = 0;
       }
     };
 
     pWorld.onStuckRescue = () => {
-      setBannerMsg('BALL RESCUED FROM CRYPT!');
+      setDmdMsg('BALL RESCUED FROM CRYPT!');
     };
 
     // Instantiate Renderers
@@ -191,7 +380,7 @@ function PlayPageContent() {
 
     controlsRef.current.lastTime = performance.now();
     controlsRef.current.physicsAccum = 0;
-  }, [layout]);
+  }, [layout, address]);
 
   // ── Keyboard Controls & Debug Toggle ('D') ──
   useEffect(() => {
@@ -202,8 +391,14 @@ function PlayPageContent() {
       }
       if (gamePhase !== 'playing') return;
 
-      if (e.code === 'KeyZ') controlsRef.current.leftDown = true;
-      if (e.code === 'Slash' || e.code === 'ArrowRight') controlsRef.current.rightDown = true;
+      if (e.code === 'KeyZ') {
+        controlsRef.current.leftDown = true;
+        sound.playFlipper(true);
+      }
+      if (e.code === 'Slash' || e.code === 'ArrowRight') {
+        controlsRef.current.rightDown = true;
+        sound.playFlipper(true);
+      }
       if (e.code === 'Space') {
         e.preventDefault();
         controlsRef.current.plungerDown = true;
@@ -211,13 +406,20 @@ function PlayPageContent() {
     };
 
     const onKeyUp = (e: KeyboardEvent) => {
-      if (e.code === 'KeyZ') controlsRef.current.leftDown = false;
-      if (e.code === 'Slash' || e.code === 'ArrowRight') controlsRef.current.rightDown = false;
+      if (e.code === 'KeyZ') {
+        controlsRef.current.leftDown = false;
+        sound.playFlipper(false);
+      }
+      if (e.code === 'Slash' || e.code === 'ArrowRight') {
+        controlsRef.current.rightDown = false;
+        sound.playFlipper(false);
+      }
       if (e.code === 'Space') {
         e.preventDefault();
         controlsRef.current.plungerDown = false;
         if (physicsRef.current) {
           physicsRef.current.launchPlunger(controlsRef.current.plungerCharge);
+          sound.playPlungerLaunch(controlsRef.current.plungerCharge);
         }
         controlsRef.current.plungerCharge = 0;
         visualStateRef.current.plungerCharge = 0;
@@ -236,7 +438,6 @@ function PlayPageContent() {
   useEffect(() => {
     if (!layout || gamePhase !== 'playing') return;
 
-    // Initialize 3D renderer if needed and mode is 3D
     if (rendererMode === '3d' && container3DRef.current && !renderer3DRef.current) {
       renderer3DRef.current = new Three3DRenderer(container3DRef.current, layout);
     }
@@ -256,7 +457,6 @@ function PlayPageContent() {
       if (physics) {
         ctrl.physicsAccum += dt;
         while (ctrl.physicsAccum >= FIXED_DT) {
-          // Plunger Charging
           if (ctrl.plungerDown) {
             ctrl.plungerCharge = Math.min(1.0, ctrl.plungerCharge + FIXED_DT * 1.8);
             vs.plungerCharge = ctrl.plungerCharge;
@@ -310,12 +510,19 @@ function PlayPageContent() {
 
   // ── Touch Handlers ──
   const handleTouch = (action: 'left' | 'right' | 'plunger', down: boolean) => {
-    if (action === 'left') controlsRef.current.leftDown = down;
-    if (action === 'right') controlsRef.current.rightDown = down;
+    if (action === 'left') {
+      controlsRef.current.leftDown = down;
+      sound.playFlipper(down);
+    }
+    if (action === 'right') {
+      controlsRef.current.rightDown = down;
+      sound.playFlipper(down);
+    }
     if (action === 'plunger') {
       controlsRef.current.plungerDown = down;
       if (!down && physicsRef.current) {
         physicsRef.current.launchPlunger(controlsRef.current.plungerCharge);
+        sound.playPlungerLaunch(controlsRef.current.plungerCharge);
         controlsRef.current.plungerCharge = 0;
         visualStateRef.current.plungerCharge = 0;
       }
@@ -348,128 +555,133 @@ function PlayPageContent() {
                 <span className="text-xs font-mono uppercase tracking-wider text-chog-purpleSoft font-bold">
                   NFT Essentiality Mode
                 </span>
-                <span className="px-2.5 py-0.5 rounded-full bg-chog-purple/30 text-white font-mono text-[11px]">
+                <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 text-[10px] font-mono">
                   Leaderboard Eligible
                 </span>
               </div>
-              <h2 className="text-2xl font-bold text-white">Soul Ball</h2>
-              <p className="text-chog-text text-sm leading-relaxed">
-                Your Chog’s on-chain traits shape the ball’s mass, restitution, ghost sensing, and unlocks its unique Haunt Power.
+              <h2 className="font-koulen text-3xl text-white tracking-wide">
+                SOUL BALL (OWNED CHOG)
+              </h2>
+              <p className="text-sm text-chog-muted">
+                Your Chog's real on-chain traits govern ball mass, bounce restitution, ghost sense attraction, and Haunt Powers. Unlocks Reunion with your owned ghosts!
               </p>
 
-              {!isConnected ? (
-                <div className="py-4 flex flex-col items-center gap-3">
-                  <p className="text-xs text-chog-muted text-center">Connect wallet on Monad to verify ownership</p>
-                  <ConnectButton />
-                </div>
-              ) : loadingChogs ? (
-                <div className="py-6 flex items-center justify-center gap-2 text-chog-muted text-sm font-mono">
-                  <RefreshCw className="w-4 h-4 animate-spin text-chog-purple" />
-                  <span>Loading owned Chogs from Monad...</span>
-                </div>
-              ) : ownedChogs.length === 0 ? (
-                <div className="py-4 text-center space-y-2">
-                  <p className="text-xs text-amber-300">No Chogs found in connected wallet.</p>
-                  <a
-                    href="https://chog.xyz"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-xs text-chog-purple underline"
-                  >
-                    Acquire a Chog Genesis NFT
-                  </a>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  <div className="grid grid-cols-4 gap-2 max-h-40 overflow-y-auto pr-1">
-                    {ownedChogs.map((chog) => (
-                      <button
-                        key={chog.tokenId}
-                        onClick={() => setSelectedChog(chog)}
-                        className={`p-1.5 rounded-xl border flex flex-col items-center gap-1 transition-all ${
-                          selectedChog?.tokenId === chog.tokenId
-                            ? 'border-chog-purple bg-chog-purple/20'
-                            : 'border-chog-line hover:border-chog-lineBright'
-                        }`}
-                      >
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={chog.image} alt={chog.name} className="w-12 h-12 rounded-lg object-cover" />
-                        <span className="text-[10px] font-mono text-white truncate w-full text-center">
-                          #{chog.tokenId}
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-
-                  {selectedChog && (
-                    <div className="p-3 rounded-xl bg-chog-surface1 border border-chog-line flex items-center gap-3">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={selectedChog.image} alt={selectedChog.name} className="w-12 h-12 rounded-lg object-cover" />
-                      <div>
-                        <div className="text-sm font-bold text-white">{selectedChog.name}</div>
-                        <div className="text-xs text-chog-purpleSoft font-mono">Soul Ball ready</div>
-                      </div>
+              {/* Wallet Chog Picker */}
+              <div className="pt-2">
+                {!isConnected ? (
+                  <div className="p-4 rounded-xl bg-black/40 border border-white/10 text-center space-y-3">
+                    <p className="text-xs font-mono text-zinc-400">
+                      Connect your Monad wallet to load your owned Chogs:
+                    </p>
+                    <div className="flex justify-center">
+                      <ConnectButton />
                     </div>
-                  )}
-                </div>
-              )}
+                  </div>
+                ) : loadingChogs ? (
+                  <div className="p-4 rounded-xl bg-black/40 border border-white/10 text-center flex items-center justify-center gap-2 text-xs font-mono text-zinc-400">
+                    <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                    <span>Querying verified owner snapshot...</span>
+                  </div>
+                ) : ownedChogs.length === 0 ? (
+                  <div className="p-4 rounded-xl bg-black/40 border border-white/10 text-center space-y-2">
+                    <p className="text-xs font-mono text-amber-400">
+                      No Chogs detected in this wallet.
+                    </p>
+                    <p className="text-[11px] text-zinc-500">
+                      Play with Guest Spirit below, or acquire a Chog on Monad to unlock Soul Ball physics.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <label className="text-xs font-mono text-zinc-400">
+                      Select Soul Ball ({ownedChogs.length} Owned):
+                    </label>
+                    <div className="grid grid-cols-3 gap-2 max-h-40 overflow-y-auto p-1">
+                      {ownedChogs.map((c) => (
+                        <button
+                          key={c.tokenId}
+                          onClick={() => setSelectedChog(c)}
+                          className={`p-2 rounded-xl border text-center transition-all ${
+                            selectedChog?.tokenId === c.tokenId
+                              ? 'border-chog-purple bg-chog-purple/20'
+                              : 'border-white/10 bg-black/30 hover:border-white/30'
+                          }`}
+                        >
+                          <img
+                            src={c.image}
+                            alt={c.name}
+                            className="w-12 h-12 mx-auto rounded-lg object-cover mb-1"
+                          />
+                          <span className="text-[10px] font-mono block text-white truncate">
+                            #{c.tokenId}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
 
             <button
               onClick={() => startGame(selectedChog)}
               disabled={!selectedChog}
-              className="w-full py-3.5 rounded-xl bg-gradient-to-r from-chog-purple to-chog-purpleSoft hover:from-chog-purple hover:to-chog-purple text-white font-koulen text-xl tracking-wider shadow-lg disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+              className="w-full py-3.5 rounded-xl bg-chog-purple hover:bg-chog-purple/80 disabled:opacity-40 disabled:cursor-not-allowed text-white font-mono font-bold text-sm tracking-wider uppercase transition-all shadow-lg shadow-chog-purple/20 flex items-center justify-center gap-2"
             >
-              LAUNCH SOUL BALL
+              <Zap className="w-4 h-4 fill-current" />
+              <span>Launch with {selectedChog ? selectedChog.name : 'Soul Ball'}</span>
             </button>
           </div>
 
           {/* Option 2: Guest Spirit */}
-          <div className="bg-chog-card border border-chog-line rounded-2xl p-6 flex flex-col justify-between space-y-4">
+          <div className="bg-chog-card border border-white/10 rounded-2xl p-6 flex flex-col justify-between space-y-4">
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-mono uppercase tracking-wider text-chog-muted">
-                  Baseline Mode
+                <span className="text-xs font-mono uppercase tracking-wider text-zinc-400 font-bold">
+                  Practice / Demo Mode
                 </span>
-                <span className="px-2.5 py-0.5 rounded-full bg-white/10 text-chog-muted font-mono text-[11px]">
-                  Unranked
+                <span className="px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-400 text-[10px] font-mono">
+                  Unranked Baseline
                 </span>
               </div>
-              <h2 className="text-2xl font-bold text-white">Guest Spirit</h2>
-              <p className="text-chog-text text-sm leading-relaxed">
-                A standardized baseline spirit ball with default weight and zero traits. Play freely without connecting a wallet.
+              <h2 className="font-koulen text-3xl text-zinc-300 tracking-wide">
+                GUEST SPIRIT (NO NFT)
+              </h2>
+              <p className="text-sm text-chog-muted">
+                The baseline calibration ball. Standard neutral mass, standard bounce, no Haunt Power, and unranked gameplay. Compare side-by-side with Soul Ball physics.
               </p>
-              <div className="p-4 rounded-xl bg-chog-surface1 border border-chog-line space-y-2 text-xs text-chog-muted">
-                <div className="flex justify-between">
-                  <span>Traits:</span>
-                  <span className="text-white font-mono">None (Baseline)</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Haunt Power:</span>
-                  <span className="text-white font-mono">Disabled</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Leaderboard:</span>
-                  <span className="text-amber-300 font-mono">Unranked</span>
-                </div>
+              <div className="p-4 rounded-xl bg-black/40 border border-white/5 space-y-1 text-xs font-mono text-zinc-400">
+                <p>• Ball Mass: 1.0 (neutral baseline)</p>
+                <p>• Restitution: 0.35 (standard steel)</p>
+                <p>• Ghost Sense: Off</p>
+                <p>• Leaderboard: Practice only</p>
               </div>
             </div>
 
             <button
               onClick={() => startGame(null)}
-              className="w-full py-3.5 rounded-xl bg-chog-surface1 border border-chog-line hover:border-chog-lineBright text-white font-koulen text-xl tracking-wider transition-all"
+              className="w-full py-3.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white font-mono font-bold text-sm tracking-wider uppercase transition-all flex items-center justify-center gap-2"
             >
-              PLAY AS GUEST SPIRIT
+              <Play className="w-4 h-4 fill-current" />
+              <span>Play as Guest Spirit</span>
             </button>
           </div>
         </div>
 
-        {/* Controls Guide */}
-        <div className="bg-chog-surface1 border border-chog-line rounded-2xl p-5 flex flex-wrap items-center justify-between gap-4 text-xs font-mono text-chog-muted">
-          <div><strong className="text-white">Z</strong> Left Flipper</div>
-          <div><strong className="text-white">/ or →</strong> Right Flipper</div>
-          <div><strong className="text-white">Space</strong> Hold & Release Plunger</div>
-          <div><strong className="text-chog-purple">D</strong> Toggle Debug Colliders View</div>
+        {/* Instructions banner */}
+        <div className="bg-black/30 border border-white/10 rounded-xl p-4 flex flex-wrap items-center justify-between text-xs font-mono text-zinc-400 gap-4">
+          <div className="flex items-center gap-4">
+            <span><strong className="text-white">Z</strong> Left Flipper</span>
+            <span><strong className="text-white">/ or →</strong> Right Flipper</span>
+            <span><strong className="text-white">SPACE</strong> Hold & Release Plunger</span>
+            <span><strong className="text-white">D</strong> Toggle Blueprint Debug</span>
+          </div>
+          <Link
+            href="/haunted-hall"
+            className="text-chog-purpleSoft hover:text-white underline transition-colors"
+          >
+            View Haunted Hall Codex ↗
+          </Link>
         </div>
       </div>
     );
@@ -478,154 +690,163 @@ function PlayPageContent() {
   // ── Game Over Screen ──
   if (gamePhase === 'gameover') {
     return (
-      <div className="max-w-md mx-auto py-16 px-4 text-center space-y-6">
-        <div className="text-6xl">👻</div>
-        <h2 className="font-koulen text-5xl text-white">THE SPIRIT DRAINS</h2>
-        <div className="p-6 rounded-2xl bg-chog-card border border-chog-line space-y-2">
-          <div className="text-xs uppercase font-mono text-chog-muted">Final Score</div>
-          <div className="font-mono text-5xl font-bold text-chog-purple">{score.toLocaleString()}</div>
+      <div className="max-w-xl mx-auto py-12 px-4 space-y-6 text-center">
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-950/60 border border-red-500/40 text-xs font-mono text-red-400">
+          <Ghost className="w-4 h-4" />
+          <span>ALL BALLS DRAINED</span>
         </div>
-        <button
-          onClick={() => setGamePhase('select')}
-          className="w-full py-3.5 rounded-xl bg-chog-purple hover:bg-chog-purpleSoft text-white font-koulen text-xl tracking-wider transition-all"
-        >
-          PLAY AGAIN
-        </button>
+        <h1 className="font-koulen text-6xl text-white tracking-wide">
+          GAME OVER
+        </h1>
+
+        <div className="bg-chog-card border-2 border-chog-purple/40 rounded-2xl p-6 space-y-6 shadow-2xl">
+          <div className="space-y-1">
+            <span className="text-xs font-mono text-chog-muted uppercase tracking-wider block">
+              FINAL SCORE
+            </span>
+            <span className="font-mono text-5xl font-black text-[#ff9900] drop-shadow-[0_0_12px_rgba(255,153,0,0.8)]">
+              {score.toLocaleString()}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-3 gap-3 border-y border-white/10 py-4 text-center">
+            <div>
+              <span className="text-[10px] font-mono text-zinc-400 block uppercase">
+                MAX MULTIPLIER
+              </span>
+              <span className="font-mono text-xl font-bold text-amber-400">
+                {multiplier}X
+              </span>
+            </div>
+            <div>
+              <span className="text-[10px] font-mono text-zinc-400 block uppercase">
+                GHOSTS BANISHED
+              </span>
+              <span className="font-mono text-xl font-bold text-purple-400">
+                {banishedGhosts.size} / 4
+              </span>
+            </div>
+            <div>
+              <span className="text-[10px] font-mono text-zinc-400 block uppercase">
+                SOUL BALL
+              </span>
+              <span className="font-mono text-sm font-bold text-zinc-200 truncate block">
+                {selectedChog ? `#${selectedChog.tokenId}` : 'Guest'}
+              </span>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-3">
+            <button
+              onClick={() => startGame(selectedChog)}
+              className="w-full py-3.5 rounded-xl bg-chog-purple hover:bg-chog-purple/80 text-white font-mono font-bold text-sm tracking-wider uppercase transition-all shadow-xl shadow-chog-purple/20 flex items-center justify-center gap-2"
+            >
+              <RefreshCw className="w-4 h-4" />
+              <span>PLAY AGAIN</span>
+            </button>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                onClick={() => setGamePhase('select')}
+                className="py-2.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-mono text-xs transition-colors"
+              >
+                Change Soul Ball
+              </button>
+              <Link
+                href="/haunted-hall"
+                className="py-2.5 rounded-xl bg-black/60 border border-white/10 hover:border-chog-purple text-zinc-300 font-mono text-xs flex items-center justify-center gap-1.5 transition-colors"
+              >
+                <Award className="w-3.5 h-3.5 text-chog-purpleSoft" />
+                <span>Haunted Hall</span>
+              </Link>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
 
-  // ── Active Gameplay ──
+  // ── Active Gameplay Screen ──
   return (
-    <div className="flex flex-col items-center py-2 px-2 max-w-[900px] mx-auto select-none">
-      {/* HUD Header */}
-      <div className="w-full bg-chog-card border border-chog-line rounded-2xl p-4 mb-3 flex flex-wrap items-center justify-between gap-4 shadow-lg">
-        {/* Active Spirit */}
-        <div className="flex items-center gap-3">
-          {selectedChog ? (
-            /* eslint-disable-next-line @next/next/no-img-element */
-            <img src={selectedChog.image} alt={selectedChog.name} className="w-10 h-10 rounded-xl object-cover border border-chog-purple" />
-          ) : (
-            <div className="w-10 h-10 rounded-xl bg-chog-purple/20 border border-chog-purple/40 flex items-center justify-center text-chog-purple">
-              <Zap className="w-5 h-5" />
-            </div>
-          )}
-          <div>
-            <div className="text-sm font-bold text-white">{selectedChog ? selectedChog.name : 'Guest Spirit'}</div>
-            {/* Haunt Power Meter */}
-            <div className="flex items-center gap-2 mt-1">
-              <div className="w-24 h-2 rounded-full bg-zinc-800 overflow-hidden border border-zinc-700">
-                <div
-                  className="h-full bg-gradient-to-r from-chog-purple to-pink-500 transition-all duration-200"
-                  style={{ width: `${hauntPower}%` }}
-                />
-              </div>
-              <span className="text-[10px] font-mono text-chog-purpleSoft">{hauntPower}% HAUNT</span>
-            </div>
-          </div>
+    <div className="max-w-4xl mx-auto py-2 px-2 sm:px-4 space-y-3">
+      {/* ── Top Dot-Matrix Display (DMD) ── */}
+      <DMDDisplay
+        score={score}
+        multiplier={multiplier}
+        ballsRemaining={ballsRemaining}
+        activeBallCount={activeBallCount}
+        message={dmdMsg}
+        reunionActive={reunionActive}
+        multiballActive={multiballActive}
+        rolloversLit={rolloversLit}
+      />
+
+      {/* ── Secondary HUD & Controls Row ── */}
+      <div className="flex items-center justify-between text-xs font-mono px-1">
+        {/* Left: Soul Ball info */}
+        <div className="flex items-center gap-2 bg-chog-card px-3 py-1.5 rounded-lg border border-white/10">
+          <div className="w-2.5 h-2.5 rounded-full bg-chog-purple animate-pulse" />
+          <span className="text-zinc-400">BALL:</span>
+          <span className="text-white font-bold">{selectedChog ? selectedChog.name : 'Guest Spirit'}</span>
         </div>
 
-        {/* Large Score at Top Center */}
-        <div className="text-center">
-          <div className="text-[10px] uppercase font-mono text-chog-muted tracking-widest">Score</div>
-          <div className="font-mono text-3xl sm:text-4xl font-extrabold text-white tracking-wider">
-            {score.toLocaleString()}
-          </div>
+        {/* Center: Controls Hint */}
+        <div className="hidden sm:flex items-center gap-3 text-zinc-500">
+          <span><kbd className="px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-300 font-bold">Z</kbd> Left</span>
+          <span><kbd className="px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-300 font-bold">/ or →</kbd> Right</span>
+          <span><kbd className="px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-300 font-bold">SPACE</kbd> Plunge</span>
+          <span><kbd className="px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-300 font-bold">D</kbd> Debug</span>
         </div>
 
-        {/* Balls & Renderer Toggles */}
-        <div className="flex items-center gap-4">
-          <div className="text-right">
-            <div className="text-[10px] uppercase font-mono text-chog-muted">Balls</div>
-            <div className="flex gap-1.5 mt-1 justify-end">
-              {[0, 1, 2].map((i) => (
-                <div
-                  key={i}
-                  className={`w-3.5 h-3.5 rounded-full border ${
-                    i < ballsRemaining ? 'bg-chog-purple border-chog-purpleSoft shadow-sm shadow-chog-purple' : 'bg-zinc-800 border-zinc-700'
-                  }`}
-                />
-              ))}
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-1">
-            <button
-              onClick={() => setRendererMode((prev) => (prev === '3d' ? '2d' : '3d'))}
-              className="px-2.5 py-1 rounded-lg bg-chog-surface1 border border-chog-line text-[11px] font-mono text-chog-muted hover:text-white"
-            >
-              Mode: {rendererMode.toUpperCase()}
-            </button>
-            <button
-              onClick={() => setDebugView((prev) => !prev)}
-              className={`px-2.5 py-1 rounded-lg border text-[11px] font-mono flex items-center gap-1 ${
-                debugView ? 'bg-chog-purple border-chog-purple text-white' : 'bg-chog-surface1 border-chog-line text-chog-muted'
-              }`}
-            >
-              <Eye className="w-3 h-3" />
-              <span>Debug (D)</span>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Banner Area for Event Callouts */}
-      <div className="w-full bg-gradient-to-r from-chog-purple/20 via-chog-surface1 to-chog-purple/20 border border-chog-purple/40 rounded-xl px-4 py-2 text-center text-xs font-mono text-chog-purpleSoft tracking-wide mb-3 animate-pulse">
-        {bannerMsg}
-      </div>
-
-      {/* Canvas Viewport (Portrait 400x720 / 600x1080) */}
-      <div className="relative rounded-2xl overflow-hidden border-2 border-chog-purple/40 shadow-2xl shadow-chog-purple/20 bg-black">
-        {/* 3D WebGL2 Canvas Container */}
-        <div
-          ref={container3DRef}
-          className={`w-[400px] sm:w-[480px] md:w-[540px] h-[720px] sm:h-[860px] md:h-[970px] ${
-            rendererMode === '3d' && !debugView ? 'block' : 'hidden'
-          }`}
-        />
-
-        {/* 2D Flat / Debug Canvas */}
-        <canvas
-          ref={canvas2DRef}
-          width={540}
-          height={970}
-          className={`w-[400px] sm:w-[480px] md:w-[540px] h-[720px] sm:h-[860px] md:h-[970px] ${
-            rendererMode === '2d' || debugView ? 'block' : 'hidden'
-          }`}
-        />
-
-        {/* Full-Screen Touch Zones for Flippers */}
-        <div className="absolute inset-0 flex pointer-events-auto" style={{ bottom: '80px' }}>
-          <div
-            className="flex-1 h-full cursor-pointer active:bg-white/5 transition-colors"
-            onPointerDown={() => handleTouch('left', true)}
-            onPointerUp={() => handleTouch('left', false)}
-            onPointerLeave={() => handleTouch('left', false)}
-          />
-          <div
-            className="flex-1 h-full cursor-pointer active:bg-white/5 transition-colors"
-            onPointerDown={() => handleTouch('right', true)}
-            onPointerUp={() => handleTouch('right', false)}
-            onPointerLeave={() => handleTouch('right', false)}
-          />
-        </div>
-
-        {/* Touch Plunger Bar */}
-        <div className="absolute bottom-3 right-3 left-3 flex gap-3">
+        {/* Right: Renderer Switcher & FPS */}
+        <div className="flex items-center gap-2">
+          <span className="text-zinc-500">{fpsDisplay} FPS</span>
           <button
-            onPointerDown={() => handleTouch('plunger', true)}
-            onPointerUp={() => handleTouch('plunger', false)}
-            onPointerLeave={() => handleTouch('plunger', false)}
-            className="flex-1 py-3 rounded-xl bg-gradient-to-r from-amber-600 to-amber-700 active:from-amber-500 active:to-amber-600 text-white font-koulen text-lg tracking-wider shadow-lg shadow-amber-900/40 cursor-pointer select-none"
+            onClick={() => setRendererMode((prev) => (prev === '3d' ? '2d' : '3d'))}
+            className="px-2.5 py-1 rounded bg-[#1e1330] border border-chog-purple/40 text-chog-purpleSoft hover:text-white transition-colors"
           >
-            HOLD TO CHARGE PLUNGER · RELEASE TO LAUNCH
+            {rendererMode === '3d' ? '3D WebGL2' : '2D Canvas'}
           </button>
         </div>
       </div>
 
-      <div className="flex justify-between w-full max-w-[540px] text-[11px] font-mono text-chog-muted mt-2">
-        <span>Controls: Z (Left) · / (Right) · Space (Plunger) · D (Debug Colliders)</span>
-        {rendererMode === '3d' && !debugView && <span>FPS: {fpsDisplay}</span>}
+      {/* ── Table Container ── */}
+      <div className="relative w-full aspect-[1/2] max-h-[78vh] mx-auto rounded-2xl overflow-hidden bg-black border-2 border-chog-purple/50 shadow-2xl shadow-purple-950/40">
+        {/* 3D WebGL2 Container */}
+        {rendererMode === '3d' && !debugView && (
+          <div ref={container3DRef} className="w-full h-full" />
+        )}
+
+        {/* 2D Canvas Container (or Debug View) */}
+        {(rendererMode === '2d' || debugView) && (
+          <canvas
+            ref={canvas2DRef}
+            width={600}
+            height={1200}
+            className="w-full h-full object-contain"
+          />
+        )}
+
+        {/* Mobile Touch Overlay Controls */}
+        <div className="absolute inset-0 flex pointer-events-auto">
+          {/* Left Flipper Half */}
+          <div
+            className="w-5/12 h-full opacity-0 active:opacity-10 bg-purple-500/20 transition-opacity"
+            onTouchStart={() => handleTouch('left', true)}
+            onTouchEnd={() => handleTouch('left', false)}
+          />
+          {/* Plunger Strip */}
+          <div
+            className="w-2/12 h-full opacity-0 active:opacity-20 bg-amber-500/30 transition-opacity"
+            onTouchStart={() => handleTouch('plunger', true)}
+            onTouchEnd={() => handleTouch('plunger', false)}
+          />
+          {/* Right Flipper Half */}
+          <div
+            className="w-5/12 h-full opacity-0 active:opacity-10 bg-purple-500/20 transition-opacity"
+            onTouchStart={() => handleTouch('right', true)}
+            onTouchEnd={() => handleTouch('right', false)}
+          />
+        </div>
       </div>
     </div>
   );
@@ -633,14 +854,8 @@ function PlayPageContent() {
 
 export default function PlayPage() {
   return (
-    <React.Suspense
-      fallback={
-        <div className="min-h-screen bg-black flex items-center justify-center text-chog-purple font-mono">
-          Loading Chog Swarm: Haunted Pinball...
-        </div>
-      }
-    >
+    <Suspense fallback={<div className="text-center py-20 font-mono text-zinc-500">Loading Pinball...</div>}>
       <PlayPageContent />
-    </React.Suspense>
+    </Suspense>
   );
 }

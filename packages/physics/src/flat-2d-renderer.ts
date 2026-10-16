@@ -4,14 +4,22 @@
  * Full flat 2D renderer for Chog Swarm: Haunted Pinball.
  * Built directly from /docs/pinball/table-layout.json.
  * Accessible with ?renderer=2d or as the lightweight fallback.
+ *
+ * Gate 2 Updates:
+ * - Multiball rendering (all active balls on playfield)
+ * - Rollover lane illumination (bright amber for lit, dim purple for unlit)
+ * - Crypt Portal rotating vortex animation
+ * - Ghost targets: Reunion radiant golden/emerald glow and banished seal badges
  */
 
 import { TableLayout } from './types';
-import { PhysicsWorldInstance } from './physics-world';
+import { PhysicsWorldInstance, BallState } from './physics-world';
 
 export interface GameVisualState {
   score: number;
+  multiplier: number;
   ballsRemaining: number;
+  activeBallCount: number;
   hauntPower01: number;
   soulBallName: string;
   soulBallImage?: string;
@@ -19,6 +27,11 @@ export interface GameVisualState {
   bumperFlash: Map<string, number>;
   slingshotFlash: Map<string, number>;
   ghostDamage: Map<string, number>; // ghost id -> hit count (0..3)
+  banishedGhosts: Set<string>;
+  reunionActive: boolean;
+  reunionGhostId?: string;
+  multiballActive: boolean;
+  cryptHeld: boolean;
   rolloversLit: Set<string>;
   plungerCharge: number;
 }
@@ -157,41 +170,57 @@ export class Flat2DRenderer {
     rl.letters.forEach((letter, i) => {
       const lx = (rl.dividerX[i] + rl.dividerX[i + 1]) / 2;
       const isLit = state.rolloversLit.has(letter);
+      const slotW = toDist(rl.dividerX[i + 1] - rl.dividerX[i]);
+      const slotH = toDist(rl.y1 - rl.y0);
+
+      // Lit background highlight
+      if (isLit) {
+        ctx.fillStyle = 'rgba(251, 191, 36, 0.25)';
+        ctx.fillRect(toX(rl.dividerX[i]), toY(rl.y0), slotW, slotH);
+      }
+
       ctx.fillStyle = isLit ? '#fbbf24' : '#4b5563';
-      ctx.font = 'bold 14px monospace';
+      ctx.font = 'bold 15px monospace';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       if (isLit) {
         ctx.shadowColor = '#f59e0b';
-        ctx.shadowBlur = 10;
+        ctx.shadowBlur = 12;
       }
       ctx.fillText(letter, toX(lx), toY((rl.y0 + rl.y1) / 2));
       ctx.shadowBlur = 0;
     });
 
-    // ── Crypt Portal ──
+    // ── Crypt Portal (Vortex Animation) ──
     const cp = L.cryptPortal;
     ctx.save();
-    const portalPulse = 1 + 0.08 * Math.sin(this.timeSec * 4);
+    const portalPulse = state.cryptHeld ? 1.25 : 1 + 0.08 * Math.sin(this.timeSec * 4);
     const pGrad = ctx.createRadialGradient(
       toX(cp.x), toY(cp.y), 0,
       toX(cp.x), toY(cp.y), toDist(cp.radius * portalPulse)
     );
-    pGrad.addColorStop(0, 'rgba(52, 211, 153, 0.8)');
-    pGrad.addColorStop(0.7, 'rgba(16, 185, 129, 0.4)');
+    pGrad.addColorStop(0, state.cryptHeld ? 'rgba(250, 204, 21, 0.9)' : 'rgba(52, 211, 153, 0.8)');
+    pGrad.addColorStop(0.7, state.cryptHeld ? 'rgba(234, 88, 12, 0.5)' : 'rgba(16, 185, 129, 0.4)');
     pGrad.addColorStop(1, 'rgba(6, 78, 59, 0)');
     ctx.fillStyle = pGrad;
     ctx.beginPath();
     ctx.arc(toX(cp.x), toY(cp.y), toDist(cp.radius * portalPulse), 0, Math.PI * 2);
     ctx.fill();
 
-    ctx.strokeStyle = '#34d399';
+    // Spiral Vortex Arms
+    ctx.strokeStyle = state.cryptHeld ? '#facc15' : '#34d399';
     ctx.lineWidth = 2;
-    ctx.stroke();
-    ctx.fillStyle = '#a7f3d0';
+    for (let arm = 0; arm < 3; arm++) {
+      ctx.beginPath();
+      const armAngle = this.timeSec * 6 + (arm * Math.PI * 2) / 3;
+      ctx.arc(toX(cp.x), toY(cp.y), toDist(cp.radius * 0.75), armAngle, armAngle + Math.PI / 2);
+      ctx.stroke();
+    }
+
+    ctx.fillStyle = state.cryptHeld ? '#fef08a' : '#a7f3d0';
     ctx.font = 'bold 10px monospace';
     ctx.textAlign = 'center';
-    ctx.fillText('CRYPT', toX(cp.x), toY(cp.y) + 3);
+    ctx.fillText(state.cryptHeld ? 'LOCK!' : 'CRYPT', toX(cp.x), toY(cp.y) + 3);
     ctx.restore();
 
     // ── Pop Bumpers (Slate Tombstones) ──
@@ -251,13 +280,16 @@ export class Flat2DRenderer {
       const gr = toDist(gt.radius);
       const ghostInfo = GHOST_CHOGS[gt.id];
       const hits = state.ghostDamage.get(gt.id) ?? 0;
+      const isBanished = state.banishedGhosts.has(gt.id) || hits >= 3;
+      const isReunion = state.reunionActive && state.reunionGhostId === gt.id;
 
-      // Outer glowing frame
+      // Outer glowing frame (Gold/Emerald for Reunion, Purple for Banished, Cyan normal)
       ctx.save();
-      ctx.strokeStyle = hits >= 3 ? '#10b981' : '#06b6d4';
-      ctx.lineWidth = 3;
-      ctx.shadowColor = '#06b6d4';
-      ctx.shadowBlur = 12;
+      const frameColor = isReunion ? '#10b981' : isBanished ? '#a855f7' : '#06b6d4';
+      ctx.strokeStyle = frameColor;
+      ctx.lineWidth = isReunion ? 4 : 3;
+      ctx.shadowColor = frameColor;
+      ctx.shadowBlur = isReunion ? 20 : 12;
       ctx.beginPath();
       ctx.arc(gx, gy, gr, 0, Math.PI * 2);
       ctx.stroke();
@@ -271,23 +303,39 @@ export class Flat2DRenderer {
         ctx.arc(gx, gy, gr - 2, 0, Math.PI * 2);
         ctx.clip();
         ctx.drawImage(img, gx - gr, gy - gr, gr * 2, gr * 2);
+
+        // Banished dark overlay
+        if (isBanished) {
+          ctx.fillStyle = 'rgba(126, 34, 206, 0.4)';
+          ctx.fill();
+        }
         ctx.restore();
       }
 
-      // Damage Rings
-      for (let r = 1; r <= hits; r++) {
-        ctx.strokeStyle = '#ef4444';
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.arc(gx, gy, gr + r * 4, 0, Math.PI * 2);
-        ctx.stroke();
+      // Damage Rings (if not banished)
+      if (!isBanished) {
+        for (let r = 1; r <= hits; r++) {
+          ctx.strokeStyle = '#ef4444';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.arc(gx, gy, gr + r * 4, 0, Math.PI * 2);
+          ctx.stroke();
+        }
       }
 
-      // Label
-      ctx.fillStyle = '#cffafe';
-      ctx.font = '10px monospace';
+      // Status Badge Tag
+      ctx.font = 'bold 10px monospace';
       ctx.textAlign = 'center';
-      ctx.fillText(ghostInfo?.name || gt.id, gx, gy + gr + 14);
+      if (isReunion) {
+        ctx.fillStyle = '#34d399';
+        ctx.fillText('❤️ REUNION', gx, gy + gr + 14);
+      } else if (isBanished) {
+        ctx.fillStyle = '#c084fc';
+        ctx.fillText('★ SEALED', gx, gy + gr + 14);
+      } else {
+        ctx.fillStyle = '#cffafe';
+        ctx.fillText(`${ghostInfo?.name || gt.id} (${hits}/3)`, gx, gy + gr + 14);
+      }
       ctx.restore();
     });
 
@@ -338,40 +386,44 @@ export class Flat2DRenderer {
     ctx.fillRect(toX(pl.x) - toDist(0.025), toY(pl.restY) + plungerTravelPx, toDist(0.05), toDist(0.015));
     ctx.restore();
 
-    // ── Soul Ball ──
-    const bPos = physics.getBallState();
+    // ── Active Balls (Multiball Support) ──
+    const allBalls = physics.getAllBallStates ? physics.getAllBallStates() : [physics.getBallState()];
     const bRad = toDist(L.ball.radius);
-    const bx = toX(bPos.x);
-    const by = toY(bPos.y);
 
-    ctx.save();
-    // Ball glow
-    const bGlow = ctx.createRadialGradient(bx, by, bRad * 0.2, bx, by, bRad * 2.0);
-    bGlow.addColorStop(0, 'rgba(192, 132, 252, 0.6)');
-    bGlow.addColorStop(1, 'rgba(192, 132, 252, 0)');
-    ctx.fillStyle = bGlow;
-    ctx.beginPath();
-    ctx.arc(bx, by, bRad * 2.0, 0, Math.PI * 2);
-    ctx.fill();
+    allBalls.forEach((bPos, idx) => {
+      const bx = toX(bPos.x);
+      const by = toY(bPos.y);
 
-    // Clip Soul Ball Chog art
-    if (this.soulBallImg && this.soulBallImg.complete) {
       ctx.save();
+      // Ball radiant glow (Gold if Reunion, Purple default)
+      const glowColor = state.reunionActive ? 'rgba(52, 211, 153, 0.7)' : 'rgba(192, 132, 252, 0.6)';
+      const bGlow = ctx.createRadialGradient(bx, by, bRad * 0.2, bx, by, bRad * 2.2);
+      bGlow.addColorStop(0, glowColor);
+      bGlow.addColorStop(1, 'rgba(0, 0, 0, 0)');
+      ctx.fillStyle = bGlow;
       ctx.beginPath();
-      ctx.arc(bx, by, bRad, 0, Math.PI * 2);
-      ctx.clip();
-      ctx.drawImage(this.soulBallImg, bx - bRad, by - bRad, bRad * 2, bRad * 2);
-      ctx.restore();
-    } else {
-      ctx.fillStyle = '#f8fafc';
-      ctx.beginPath();
-      ctx.arc(bx, by, bRad, 0, Math.PI * 2);
+      ctx.arc(bx, by, bRad * 2.2, 0, Math.PI * 2);
       ctx.fill();
-    }
 
-    ctx.strokeStyle = '#c084fc';
-    ctx.lineWidth = 1.5;
-    ctx.stroke();
-    ctx.restore();
+      // Primary ball draws Soul Ball art if present, extra balls draw spectral glowing spheres
+      if (idx === 0 && this.soulBallImg && this.soulBallImg.complete) {
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(bx, by, bRad, 0, Math.PI * 2);
+        ctx.clip();
+        ctx.drawImage(this.soulBallImg, bx - bRad, by - bRad, bRad * 2, bRad * 2);
+        ctx.restore();
+      } else {
+        ctx.fillStyle = idx === 0 ? '#f8fafc' : '#fbbf24';
+        ctx.beginPath();
+        ctx.arc(bx, by, bRad, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      ctx.strokeStyle = state.reunionActive ? '#34d399' : '#c084fc';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+      ctx.restore();
+    });
   }
 }

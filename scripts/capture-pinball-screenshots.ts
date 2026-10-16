@@ -47,13 +47,20 @@ async function capture() {
   const renderer2D = new Flat2DRenderer(layout);
   const visualState: GameVisualState = {
     score: 12450,
+    multiplier: 2,
     ballsRemaining: 3,
+    activeBallCount: 1,
     hauntPower01: 0.65,
     soulBallName: 'CHOG #53 — Blaze',
     bannerText: 'GHOST REUNION TRIGGERED! 2X COMBO',
     bumperFlash: new Map([['b1', Date.now() + 500]]),
     slingshotFlash: new Map([['left', Date.now() + 500]]),
     ghostDamage: new Map([['g1', 2], ['g2', 1]]),
+    banishedGhosts: new Set(),
+    reunionActive: true,
+    reunionGhostId: 'g1',
+    multiballActive: false,
+    cryptHeld: false,
     rolloversLit: new Set(['C', 'H']),
     plungerCharge: 0,
   };

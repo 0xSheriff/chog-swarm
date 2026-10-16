@@ -3,6 +3,12 @@
  *
  * Deterministic 120 Hz Planck.js physics simulation built directly from TableLayout.
  * Zero hardcoded dimensions — all geometry, scales, velocities, and angles derive from the JSON.
+ *
+ * Gate 2 Additions:
+ * - Rollover lane sensors (C-H-O-G) with debounced detection
+ * - Crypt Portal ball capture, hold (holdSeconds: 1.0), and downward eject toward bumpers
+ * - Multiball support (multiple simultaneous balls on playfield, extra ball spawning and drain logic)
+ * - Ghost target impulse on hit
  */
 
 import * as pl from 'planck';
@@ -10,10 +16,19 @@ import { TableLayout } from './types';
 
 export const FIXED_DT = 1 / 120; // 120 Hz fixed timestep
 
+export interface BallState {
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  speed: number;
+}
+
 export interface PhysicsWorldInstance {
   world: pl.World;
   layout: TableLayout;
   ball: pl.Body;
+  balls: pl.Body[];
   leftFlipperBody: pl.Body;
   rightFlipperBody: pl.Body;
   leftFlipperJoint: pl.RevoluteJoint;
@@ -26,14 +41,19 @@ export interface PhysicsWorldInstance {
   setRightFlipper: (up: boolean) => void;
   launchPlunger: (charge01: number) => void;
   resetBall: () => void;
-  getBallState: () => { x: number; y: number; vx: number; vy: number; speed: number };
+  spawnBall: (x?: number, y?: number, vx?: number, vy?: number) => pl.Body;
+  removeBall: (b: pl.Body) => void;
+  getBallState: () => BallState;
+  getAllBallStates: () => BallState[];
   getFlipperAnglesDeg: () => { left: number; right: number };
   onDrain?: () => void;
+  onExtraBallDrain?: (remaining: number) => void;
   onBumperHit?: (id: string, score: number) => void;
   onSlingshotHit?: (id: string) => void;
   onGhostHit?: (id: string) => void;
   onRolloverHit?: (letter: string) => void;
   onCryptEnter?: () => void;
+  onCryptEject?: () => void;
   onStuckRescue?: () => void;
 }
 
@@ -89,8 +109,22 @@ export function createPhysicsWorld(layout: TableLayout): PhysicsWorldInstance {
     addLine([dx, rl.y0], [dx, rl.y1]);
   });
 
+  // Rollover lane sensors (C-H-O-G)
+  const rolloverBody = world.createBody({ type: 'static', position: pl.Vec2(0, 0) });
+  rl.letters.forEach((letter, i) => {
+    const x0 = rl.dividerX[i];
+    const x1 = rl.dividerX[i + 1];
+    const cx = toP((x0 + x1) / 2);
+    const cy = toP((rl.y0 + rl.y1) / 2);
+    const hw = toP((x1 - x0) / 2) * 0.85;
+    const hh = toP((rl.y1 - rl.y0) / 2) * 0.7;
+    const fix = rolloverBody.createFixture(pl.Box(hw, hh, pl.Vec2(cx, cy), 0), {
+      isSensor: true,
+    });
+    (fix as any).userData = { type: 'rollover', letter };
+  });
+
   // ── 2. One-Way Gate (Plunger Lane) ──
-  // Gap between y=0.30 and y=0.40 on x=0.925. Ball may pass going UP (vy < 0), blocked going down.
   const gate = layout.walls.oneWayGate;
   const gateFixture = wallBody.createFixture(
     pl.Edge(pl.Vec2(toP(gate.from[0]), toP(gate.from[1])), pl.Vec2(toP(gate.to[0]), toP(gate.to[1]))),
@@ -107,7 +141,7 @@ export function createPhysicsWorld(layout: TableLayout): PhysicsWorldInstance {
     });
     const fix = bBody.createFixture(pl.Circle(toP(bSpec.radius)), {
       friction: 0.0,
-      restitution: 0.2, // Kick impulse handles speed
+      restitution: 0.2,
     });
     (fix as any).userData = { type: 'bumper', id: bSpec.id, spec: bSpec };
     bumpers.set(bSpec.id, bBody);
@@ -161,7 +195,6 @@ export function createPhysicsWorld(layout: TableLayout): PhysicsWorldInstance {
   (drainFix as any).userData = { type: 'drain' };
 
   // ── 8. Flippers ──
-  // Build flipper polygon shape
   function createFlipper(
     side: 'left' | 'right',
     spec: typeof layout.flippers.left
@@ -171,7 +204,6 @@ export function createPhysicsWorld(layout: TableLayout): PhysicsWorldInstance {
     const rBase = toP(spec.baseRadius);
     const rTip = toP(spec.tipRadius);
 
-    // Initial orientation at restAngle
     const restRad = (spec.restAngle * Math.PI) / 180;
     const body = world.createBody({
       type: 'dynamic',
@@ -180,7 +212,6 @@ export function createPhysicsWorld(layout: TableLayout): PhysicsWorldInstance {
       bullet: true,
     });
 
-    // Approximation of rounded flipper with polygon vertices
     const flipperPoly = [
       pl.Vec2(0, -rBase),
       pl.Vec2(len, -rTip),
@@ -196,10 +227,8 @@ export function createPhysicsWorld(layout: TableLayout): PhysicsWorldInstance {
       restitution: 0.1,
     });
 
-    // Anchor body for revolute joint
     const anchorBody = world.createBody({ type: 'static', position: pivot });
 
-    // Lower and upper angle limits in radians
     const rad1 = (spec.restAngle * Math.PI) / 180;
     const rad2 = (spec.upAngle * Math.PI) / 180;
     const lowerAngle = Math.min(rad1, rad2);
@@ -228,30 +257,45 @@ export function createPhysicsWorld(layout: TableLayout): PhysicsWorldInstance {
   const [leftFlipperBody, leftFlipperJoint] = createFlipper('left', layout.flippers.left);
   const [rightFlipperBody, rightFlipperJoint] = createFlipper('right', layout.flippers.right);
 
-  // ── 9. Ball ──
+  // ── 9. Ball System & Factory ──
   const ballRadiusP = toP(layout.ball.radius);
   const ballStartP = pl.Vec2(toP(layout.ball.start.x), toP(layout.ball.start.y));
 
-  const ball = world.createBody({
-    type: 'dynamic',
-    position: ballStartP,
-    bullet: layout.ball.bullet,
-    linearDamping: 0.05,
-    angularDamping: 0.2,
-  });
+  function createBallBody(posP: pl.Vec2): pl.Body {
+    const b = world.createBody({
+      type: 'dynamic',
+      position: posP,
+      bullet: layout.ball.bullet,
+      linearDamping: 0.05,
+      angularDamping: 0.2,
+    });
 
-  const ballFix = ball.createFixture(pl.Circle(ballRadiusP), {
-    density: 1.0,
-    friction: layout.ball.friction,
-    restitution: layout.ball.restitution,
-  });
-  (ballFix as any).userData = { type: 'ball' };
+    const bFix = b.createFixture(pl.Circle(ballRadiusP), {
+      density: 1.0,
+      friction: layout.ball.friction,
+      restitution: layout.ball.restitution,
+    });
+    (bFix as any).userData = { type: 'ball' };
+    return b;
+  }
 
-  // ── 10. Contact Listeners & Pre-Solve ──
+  const primaryBall = createBallBody(ballStartP);
+  const balls: pl.Body[] = [primaryBall];
+
+  // Crypt Portal Capture / Hold Tracker
+  let cryptHeldBall: pl.Body | null = null;
+  let cryptHoldRemainingSec = 0;
+  let cryptCooldownRemainingSec = 0;
+
+  // Debounce for rollover hits
+  const lastRolloverTime = new Map<string, number>();
+
+  // ── 10. Instance Declaration ──
   const instance: PhysicsWorldInstance = {
     world,
     layout,
-    ball,
+    ball: primaryBall,
+    balls,
     leftFlipperBody,
     rightFlipperBody,
     leftFlipperJoint,
@@ -264,7 +308,10 @@ export function createPhysicsWorld(layout: TableLayout): PhysicsWorldInstance {
     setRightFlipper: () => {},
     launchPlunger: () => {},
     resetBall: () => {},
+    spawnBall: () => primaryBall,
+    removeBall: () => {},
     getBallState: () => ({ x: 0, y: 0, vx: 0, vy: 0, speed: 0 }),
+    getAllBallStates: () => [],
     getFlipperAnglesDeg: () => ({ left: 0, right: 0 }),
   };
 
@@ -276,18 +323,20 @@ export function createPhysicsWorld(layout: TableLayout): PhysicsWorldInstance {
     const uB = (fB as any).userData;
 
     if (uA?.type === 'oneWayGate' || uB?.type === 'oneWayGate') {
-      const bVel = ball.getLinearVelocity();
-      // If ball is traveling upwards (vy < 0), disable collision so it passes into the playfield
-      if (bVel.y < 0) {
-        contact.setEnabled(false);
-      } else {
-        // If ball is traveling downwards (vy >= 0), collision is enabled to prevent re-entering plunger lane
-        contact.setEnabled(true);
+      const ballFix = uA?.type === 'ball' ? fA : uB?.type === 'ball' ? fB : null;
+      if (ballFix) {
+        const bVel = ballFix.getBody().getLinearVelocity();
+        // If ball is traveling upwards (vy < 0), disable collision so it passes into the playfield
+        if (bVel.y < 0) {
+          contact.setEnabled(false);
+        } else {
+          contact.setEnabled(true);
+        }
       }
     }
   });
 
-  // Begin contact for Bumpers, Slingshots, Sensor Drains
+  // Begin contact for Bumpers, Slingshots, Ghosts, Rollovers, Portal, Drains
   world.on('begin-contact', (contact) => {
     const fA = contact.getFixtureA();
     const fB = contact.getFixtureB();
@@ -301,16 +350,18 @@ export function createPhysicsWorld(layout: TableLayout): PhysicsWorldInstance {
     const otherData = (otherFixture as any).userData;
     if (!otherData) return;
 
+    const hitBallBody = ballFixture.getBody();
+
     // Pop Bumper Hit: kickExitSpeed directly sets exit speed
     if (otherData.type === 'bumper') {
       const bumperSpec = otherData.spec;
       const bPos = otherFixture.getBody().getPosition();
-      const ballPos = ball.getPosition();
+      const ballPos = hitBallBody.getPosition();
       const kickDir = pl.Vec2(ballPos.x - bPos.x, ballPos.y - bPos.y);
       kickDir.normalize();
 
-      const exitSpeedP = toP(bumperSpec.kickExitSpeed); // 2.8 * 20 = 56 m/s
-      ball.setLinearVelocity(pl.Vec2(kickDir.x * exitSpeedP, kickDir.y * exitSpeedP));
+      const exitSpeedP = toP(bumperSpec.kickExitSpeed);
+      hitBallBody.setLinearVelocity(pl.Vec2(kickDir.x * exitSpeedP, kickDir.y * exitSpeedP));
 
       instance.onBumperHit?.(otherData.id, 100);
     }
@@ -318,29 +369,52 @@ export function createPhysicsWorld(layout: TableLayout): PhysicsWorldInstance {
     // Slingshot Hit: kickExitSpeed
     if (otherData.type === 'slingshot') {
       const sSpec = otherData.spec;
-      const exitSpeedP = toP(sSpec.kickExitSpeed); // 2.5 * 20 = 50 m/s
-      // Face [0, 2] normal pointing toward playfield center
+      const exitSpeedP = toP(sSpec.kickExitSpeed);
       const isLeft = otherData.id === 'left';
       const kickDir = pl.Vec2(isLeft ? 0.8 : -0.8, -0.6);
       kickDir.normalize();
-      ball.setLinearVelocity(pl.Vec2(kickDir.x * exitSpeedP, kickDir.y * exitSpeedP));
+      hitBallBody.setLinearVelocity(pl.Vec2(kickDir.x * exitSpeedP, kickDir.y * exitSpeedP));
 
       instance.onSlingshotHit?.(otherData.id);
     }
 
-    // Ghost Hit
+    // Ghost Target Hit: physical bounce with restitution 0.6 per table-layout.json
     if (otherData.type === 'ghost') {
       instance.onGhostHit?.(otherData.id);
     }
 
-    // Crypt Portal
-    if (otherData.type === 'cryptPortal') {
-      instance.onCryptEnter?.();
+    // Rollover Lane Sensor (C-H-O-G)
+    if (otherData.type === 'rollover') {
+      const letter = otherData.letter;
+      const now = Date.now();
+      const last = lastRolloverTime.get(letter) || 0;
+      if (now - last > 300) {
+        lastRolloverTime.set(letter, now);
+        instance.onRolloverHit?.(letter);
+      }
     }
 
-    // Drain
+    // Crypt Portal (Hold & Eject)
+    if (otherData.type === 'cryptPortal') {
+      if (!cryptHeldBall && cryptCooldownRemainingSec <= 0) {
+        cryptHeldBall = hitBallBody;
+        cryptHoldRemainingSec = layout.cryptPortal.holdSeconds;
+        hitBallBody.setLinearVelocity(pl.Vec2(0, 0));
+        hitBallBody.setPosition(pl.Vec2(toP(layout.cryptPortal.x), toP(layout.cryptPortal.y)));
+        instance.onCryptEnter?.();
+      }
+    }
+
+    // Drain Sensor
     if (otherData.type === 'drain') {
-      instance.onDrain?.();
+      if (balls.length > 1) {
+        // Extra ball drained in Multiball
+        instance.removeBall(hitBallBody);
+        instance.onExtraBallDrain?.(balls.length);
+      } else {
+        // Last / primary ball drained
+        instance.onDrain?.();
+      }
     }
   });
 
@@ -351,21 +425,53 @@ export function createPhysicsWorld(layout: TableLayout): PhysicsWorldInstance {
     // 1. Advance Planck physics at 120 Hz fixed step
     world.step(FIXED_DT, 8, 3);
 
-    // 2. Velocity cap enforcement
-    const v = ball.getLinearVelocity();
-    const speed = v.length();
-    if (speed > maxPhysicsSpeed) {
-      const scale = maxPhysicsSpeed / speed;
-      ball.setLinearVelocity(pl.Vec2(v.x * scale, v.y * scale));
+    // 2. Crypt Portal Hold & Eject Logic
+    if (cryptCooldownRemainingSec > 0) {
+      cryptCooldownRemainingSec -= FIXED_DT;
     }
 
-    // 3. Stuck ball detection
+    if (cryptHeldBall) {
+      cryptHoldRemainingSec -= FIXED_DT;
+      cryptHeldBall.setLinearVelocity(pl.Vec2(0, 0));
+      cryptHeldBall.setPosition(pl.Vec2(toP(layout.cryptPortal.x), toP(layout.cryptPortal.y)));
+
+      if (cryptHoldRemainingSec <= 0) {
+        // Eject downward toward pop bumpers with slight lateral push
+        const ejectSpeedP = toP(2.8);
+        const angleScatter = (Math.random() > 0.5 ? 0.35 : -0.35) * toP(0.8);
+        cryptHeldBall.setLinearVelocity(pl.Vec2(angleScatter, ejectSpeedP));
+        cryptHeldBall = null;
+        cryptCooldownRemainingSec = 1.2;
+        instance.onCryptEject?.();
+      }
+    }
+
+    // 3. Velocity cap enforcement across all balls
+    for (let i = 0; i < balls.length; i++) {
+      const b = balls[i];
+      if (b === cryptHeldBall) continue;
+
+      const v = b.getLinearVelocity();
+      const speed = v.length();
+      if (speed > maxPhysicsSpeed) {
+        const scale = maxPhysicsSpeed / speed;
+        b.setLinearVelocity(pl.Vec2(v.x * scale, v.y * scale));
+      }
+    }
+
+    // 4. Stuck ball detection (on primary ball)
+    const primaryV = instance.ball.getLinearVelocity();
+    const primarySpeed = primaryV.length();
     const stuckThreshold = toP(layout.feel.stuckSpeed);
-    if (speed < stuckThreshold && ball.getPosition().y < toP(layout.drainSensor.y0)) {
+
+    if (
+      instance.ball !== cryptHeldBall &&
+      primarySpeed < stuckThreshold &&
+      instance.ball.getPosition().y < toP(layout.drainSensor.y0)
+    ) {
       lowSpeedSeconds += FIXED_DT;
       if (lowSpeedSeconds >= layout.feel.stuckBallSeconds) {
-        // Eject upward
-        ball.setLinearVelocity(pl.Vec2(0, -toP(2.5)));
+        instance.ball.setLinearVelocity(pl.Vec2(0, -toP(2.5)));
         lowSpeedSeconds = 0;
         instance.onStuckRescue?.();
       }
@@ -375,40 +481,69 @@ export function createPhysicsWorld(layout: TableLayout): PhysicsWorldInstance {
   };
 
   // Flipper motors
-  // swingUpRadPerSec: 30, swingDownRadPerSec: 18
   instance.setLeftFlipper = (up: boolean) => {
-    // Left flipper restAngle = 25°, upAngle = -30° -> going up means negative motorSpeed
     const speed = up ? -layout.flippers.swingUpRadPerSec : layout.flippers.swingDownRadPerSec;
     leftFlipperJoint.setMotorSpeed(speed);
   };
 
   instance.setRightFlipper = (up: boolean) => {
-    // Right flipper restAngle = 155°, upAngle = 210° -> going up means positive motorSpeed
     const speed = up ? layout.flippers.swingUpRadPerSec : -layout.flippers.swingDownRadPerSec;
     rightFlipperJoint.setMotorSpeed(speed);
   };
 
-  // Plunger launch: speed range launchSpeedMin to launchSpeedMax
+  // Plunger launch
   instance.launchPlunger = (charge01: number) => {
     const clamped = Math.max(0, Math.min(1, charge01));
     const speedTU =
       layout.plunger.launchSpeedMin +
       clamped * (layout.plunger.launchSpeedMax - layout.plunger.launchSpeedMin);
     const speedP = toP(speedTU);
-    ball.setLinearVelocity(pl.Vec2(0, -speedP));
+    instance.ball.setLinearVelocity(pl.Vec2(0, -speedP));
   };
 
-  // Reset ball to start position
+  // Reset ball to start position (clearing any multiballs)
   instance.resetBall = () => {
-    ball.setPosition(ballStartP);
-    ball.setLinearVelocity(pl.Vec2(0, 0));
-    ball.setAngularVelocity(0);
+    // Destroy all extra balls
+    while (balls.length > 1) {
+      const extra = balls.pop()!;
+      world.destroyBody(extra);
+    }
+    cryptHeldBall = null;
+    cryptHoldRemainingSec = 0;
+    instance.ball = balls[0];
+    instance.ball.setPosition(ballStartP);
+    instance.ball.setLinearVelocity(pl.Vec2(0, 0));
+    instance.ball.setAngularVelocity(0);
     lowSpeedSeconds = 0;
   };
 
+  // Multiball spawning
+  instance.spawnBall = (x?: number, y?: number, vx?: number, vy?: number) => {
+    const spawnX = x !== undefined ? toP(x) : toP(layout.cryptPortal.x);
+    const spawnY = y !== undefined ? toP(y) : toP(layout.cryptPortal.y);
+    const newBall = createBallBody(pl.Vec2(spawnX, spawnY));
+    newBall.setLinearVelocity(pl.Vec2(vx !== undefined ? toP(vx) : 0, vy !== undefined ? toP(vy) : toP(2.6)));
+    balls.push(newBall);
+    return newBall;
+  };
+
+  instance.removeBall = (b: pl.Body) => {
+    const idx = balls.indexOf(b);
+    if (idx !== -1) {
+      balls.splice(idx, 1);
+      if (cryptHeldBall === b) {
+        cryptHeldBall = null;
+      }
+      world.destroyBody(b);
+      if (instance.ball === b && balls.length > 0) {
+        instance.ball = balls[0];
+      }
+    }
+  };
+
   instance.getBallState = () => {
-    const p = ball.getPosition();
-    const v = ball.getLinearVelocity();
+    const p = instance.ball.getPosition();
+    const v = instance.ball.getLinearVelocity();
     return {
       x: fromP(p.x),
       y: fromP(p.y),
@@ -416,6 +551,20 @@ export function createPhysicsWorld(layout: TableLayout): PhysicsWorldInstance {
       vy: fromP(v.y),
       speed: fromP(v.length()),
     };
+  };
+
+  instance.getAllBallStates = () => {
+    return balls.map((b) => {
+      const p = b.getPosition();
+      const v = b.getLinearVelocity();
+      return {
+        x: fromP(p.x),
+        y: fromP(p.y),
+        vx: fromP(v.x),
+        vy: fromP(v.y),
+        speed: fromP(v.length()),
+      };
+    });
   };
 
   instance.getFlipperAnglesDeg = () => {
