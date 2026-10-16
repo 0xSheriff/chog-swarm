@@ -19,40 +19,41 @@ Chog Swarm is a premium-tier autonomous web game built for Chogathon 2026 (choga
 ## 4. Current State
 - **SAFETY NET & HARDENING COMPLETE**:
   - `lib/constants.ts` canonical single source of truth for contracts (`0xc96d...3763` and `0x3500...7777`).
-  - Unit tests reject contract addresses as players (21/21 Vitest tests pass).
+  - Unit tests reject contract addresses as players (22/22 Vitest tests pass).
   - Server-side multicall owner snapshot (`lib/chog-snapshot.ts` & `/api/chogs/owned-by`).
   - Git repository created and pushed to GitHub (`0xSheriff/chog-swarm`), tagged `race-fallback`, switched to `pinball` branch.
   - Legacy routes moved/preserved at `/legacy/arena`, `/legacy/lab`, `/legacy/gauntlet`, `/legacy/demo`.
-- **PINBALL PIVOT GATE 1 COMPLETE (Playable Prototype)**:
-  - Framework-free 2D Planck.js physics engine in `packages/physics` running at fixed 120 Hz (`table.ts`, `renderer.ts`).
-  - Portrait pinball table with dual flippers, spring plunger, 3 tombstone pop bumpers with glowing impact feedback, 2 coffin slingshots, drain detection, and HUD.
-  - Controls: Keyboard (Z, /, Space) + touch-friendly screen zones.
-  - Soul Ball selection from wallet-owned Chogs with trait-derived ball physics (mass, restitution, density) + Guest Spirit fallback ball.
-  - Navigation updated: Play, Daily Haunting, Haunted Hall, Leaderboard, How It Works.
-  - Production build verified with Turbopack (25/25 routes static/dynamic).
+- **GATE 1 REDO COMPLETE (STRICT TABLE-LAYOUT.JSON SINGLE SOURCE OF TRUTH)**:
+  - **Zero hardcoded coordinates**: Both physics engine and renderers load `/docs/pinball/table-layout.json` at runtime.
+  - **Debug View ('D' key)**: Draws all colliders on dark unit grid (0..1 x, 0..2 y) matching `table-blueprint.png` 1:1.
+  - **Physics (Planck.js at 120 Hz)**: `physicsScale: 20`, gravity `2.1` table units/s² (6.5° incline), speed cap `6.0`, ball marked as `bullet`, flipper swing motors (30 rad/s up, 18 rad/s down), pop bumpers & slingshots kick to `kickExitSpeed` (2.8 and 2.5), one-way gate for plunger lane, spring plunger (3.0 to 5.6 launch speed), drain sensor, and stuck-ball rescue (<0.05 speed for >3s).
+  - **Headless Validation**: All 5 criteria from JSON pass: zero overlaps, 1.308s top-to-flipper roll time, full plunger launch reaches playfield (min Y 0.027), timed flipper shot reaches top arch (min Y 0.058).
+  - **Tilted 3D WebGL2 Renderer (Three.js)**: Camera pitch ~55°, violet-black base, moonlit rim light, teal fog, orange torches, slate tombstone pop bumpers, coffin slingshots, floating arched portraits of 4 rarest Legendary Chogs (#53 Blaze, #392 Burning Skully, #434 Chog Scream, #494 Chogbomination) with sinusoidal bob and damage rings.
+  - **Flat 2D Renderer**: Available via `?renderer=2d` or UI toggle button.
+  - **HUD**: Large score at top center, balls remaining, Soul Ball name with Haunt power meter, event callout banner, body >= 14px, labels >= 12px.
+  - **Naming**: "Chog Swarm" with subtitle "Haunted Pinball". Removed "Disconnect Test: NORMAL" nav button; Soul Ball vs Guest Spirit compared side-by-side on pre-game screen.
+  - **Build**: 25/25 routes pass clean Turbopack build with 0 errors.
 
 ## 5. Recent Changes
-- Implemented `lib/constants.ts`, `lib/chain-verify.ts`, `lib/chog-snapshot.ts`.
-- Created `/api/chogs/owned-by` route for server-side cached multicall ownership discovery.
-- Added 13 unit tests for address rejection in `tests/constants.test.ts`. Total test suite: 21 passing tests.
-- Tagged `race-fallback` and pushed to GitHub (`https://github.com/0xSheriff/chog-swarm.git`).
-- Created branch `pinball`.
-- Created `packages/physics/` containing Planck.js physics engine and custom Canvas renderer.
-- Built `/play` page with Soul Ball selection, real Chog art rendering on ball, touch and keyboard controls.
-- Added `/how-it-works`, `/daily-haunting`, `/haunted-hall` pages.
-- Moved and preserved previous race/arena modes under `/legacy`.
+- Overhauled Gate 1 table construction to strictly consume `/docs/pinball/table-layout.json` at runtime.
+- Built `packages/physics/src/debug-renderer.ts` with coordinate axes, ticks, and color-coded colliders matching `table-blueprint.png`.
+- Replaced provisional physics with Planck.js 120Hz model in `packages/physics/src/physics-world.ts`.
+- Built headless test suite in `scripts/run-pinball-validation.ts` and `tests/pinball.test.ts`. 22/22 tests passing.
+- Developed `packages/physics/src/flat-2d-renderer.ts` and `packages/physics/src/three-3d-renderer.ts`.
+- Updated `components/navbar.tsx` branding to "Chog Swarm: Haunted Pinball" and removed disconnect test button.
+- Redesigned `app/play/page.tsx` with Suspense, renderer mode toggle (3D / 2D), 'D' debug toggle, and large top-center HUD.
+- Captured screenshots: `pinball-debug.png`, `pinball-2d.png`, `pinball-3d.png` in `/public/screenshots/`.
 
 ## 6. Important Decisions
-- **Pinball Pivot as Primary Game Loop**: Pivot from grid arena to fast-paced Halloween pinball ("Chog Haunted").
-- **Strict Gate Progression**: Gate 1 is a playable 2D physics prototype with Soul Ball selection. Stopping at Gate 1 for user playtest.
-- **Framework-Free Physics Engine**: Planck.js world in `packages/physics` runs independently of React/DOM for deterministic server verification.
-- **Trait-to-Physics Mapping**: Chog traits directly determine ball mass, restitution, and powers; Guest Spirit provides a baseline ball without traits for non-holders.
+- **Rule: Never invent table dimensions**: All geometry, scales, limits, and colliders derive strictly from `/docs/pinball/table-layout.json`.
+- **Runtime JSON Loading**: Physics and rendering pipelines accept `TableLayout` as a configuration object, ensuring 100% data-driven table construction.
+- **Sidecar & Interactive Priority**: Dual renderers (Three.js 3D and Canvas 2D) provide high visual fidelity with an instant 2D fallback.
 
 ## 7. Known Issues
 - Local machine Vercel CLI is not logged in (`vercel whoami` logged out); deployment requires connecting the GitHub repo on vercel.com or running `npx vercel login`.
 
 ## 8. Current Task
-- Gate 1 Playtest handoff: Present live prototype, report on safety net and hardening items, and wait for playtest feedback before Gate 2.
+- Report Gate 1 Redo results across all 9 steps, present the 3 feel numbers, local FPS, and screenshots, and await user playtest.
 
 ## 9. Next Steps
 - Await user playtest of Gate 1.
@@ -73,6 +74,7 @@ Chog Swarm is a premium-tier autonomous web game built for Chogathon 2026 (choga
 
 ## 12. Development Rules
 - Maintain documentation integrity.
+- Never invent table dimensions; always build from `/docs/pinball/table-layout.json` (loaded at runtime). No coordinates hardcoded in code. If something in the JSON does not fit, ask the user instead of resizing it.
 - Never write app code before Step 0 completion and user sign-off on `/docs/trait-map.md`.
 - No emoji as UI icons; use SVGs or custom pixel sprites.
 - Update `memory.md` after every meaningful milestone.

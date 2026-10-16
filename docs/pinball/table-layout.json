@@ -1,0 +1,53 @@
+{
+  "_readme": "Single source of truth for the Chog Swarm pinball table. Both the physics world and the renderer MUST be built from this file. Table units: playfield plus plunger lane is 1.0 wide and 2.0 tall. Origin is top-left, x grows right, y grows down. Angles are in degrees measured from +x toward +y (down). Do not invent dimensions. If something does not fit, tell me instead of resizing it.",
+  "physicsScale": 20,
+  "physicsScaleNote": "Multiply table units by 20 to get physics meters so Box2D/Planck sees a ball radius of about 0.52 m.",
+  "table": { "width": 1.0, "height": 2.0, "playfieldRight": 0.925, "plungerLane": { "x0": 0.925, "x1": 1.0 } },
+  "gravity": 2.1,
+  "gravityNote": "Table units per second squared, pointing down. About a 6.5 degree incline. Ball should take roughly 1.2 to 1.8 s to roll from the top to the flippers.",
+  "maxBallSpeed": 6.0,
+  "ball": { "radius": 0.026, "restitution": 0.35, "friction": 0.15, "bullet": true, "start": { "x": 0.9625, "y": 1.90 } },
+  "walls": {
+    "topArch": { "type": "arc", "center": [0.5, 0.5], "radius": 0.5, "fromAngle": 180, "toAngle": 360, "note": "Semicircle over the whole width including the plunger lane. Ball leaves the lane and rides the arch leftward." },
+    "leftWall": { "type": "line", "from": [0.0, 0.5], "to": [0.0, 1.68] },
+    "outerRightWall": { "type": "line", "from": [1.0, 0.5], "to": [1.0, 2.0] },
+    "laneInnerWall": { "type": "line", "from": [0.925, 0.40], "to": [0.925, 2.0] },
+    "leftApron": { "type": "line", "from": [0.0, 1.68], "to": [0.29, 1.83] },
+    "rightApron": { "type": "line", "from": [0.925, 1.68], "to": [0.635, 1.83] },
+    "oneWayGate": { "type": "gate", "from": [0.925, 0.30], "to": [0.925, 0.40], "passes": "up", "note": "Ball may travel up through the gap from the lane, then cannot re-enter the lane." }
+  },
+  "plunger": { "x": 0.9625, "restY": 1.94, "travel": 0.10, "launchSpeedMin": 3.0, "launchSpeedMax": 5.6, "note": "Full charge must carry the ball up the lane and around the arch to the playfield." },
+  "flippers": {
+    "left":  { "pivot": [0.29, 1.83],  "length": 0.15, "baseRadius": 0.016, "tipRadius": 0.009, "restAngle": 25,  "upAngle": -30 },
+    "right": { "pivot": [0.635, 1.83], "length": 0.15, "baseRadius": 0.016, "tipRadius": 0.009, "restAngle": 155, "upAngle": 210 },
+    "swingUpRadPerSec": 30, "swingDownRadPerSec": 18,
+    "note": "Gap between the resting tips is about 0.07, which is 1.4 ball diameters. The ball can drain through it."
+  },
+  "slingshots": [
+    { "id": "left",  "verts": [[0.10, 1.46], [0.10, 1.66], [0.235, 1.71]], "kickFace": [0, 2], "kickExitSpeed": 2.5 },
+    { "id": "right", "verts": [[0.825, 1.46], [0.825, 1.66], [0.69, 1.71]], "kickFace": [0, 2], "kickExitSpeed": 2.5 }
+  ],
+  "popBumpers": [
+    { "id": "b1", "x": 0.30, "y": 0.62, "radius": 0.043, "kickExitSpeed": 2.8 },
+    { "id": "b2", "x": 0.62, "y": 0.62, "radius": 0.043, "kickExitSpeed": 2.8 },
+    { "id": "b3", "x": 0.46, "y": 0.80, "radius": 0.043, "kickExitSpeed": 2.8 }
+  ],
+  "ghostTargets": [
+    { "id": "g1", "x": 0.14, "y": 0.48, "radius": 0.05 },
+    { "id": "g2", "x": 0.78, "y": 0.48, "radius": 0.05 },
+    { "id": "g3", "x": 0.15, "y": 1.05, "radius": 0.05 },
+    { "id": "g4", "x": 0.77, "y": 1.05, "radius": 0.05 }
+  ],
+  "ghostNote": "Ghost Chogs. Hits register as damage, the ball bounces off. Ghosts may drift up to 0.04 around their anchor using their trait-compiled policy. They must never overlap a wall or bumper.",
+  "rolloverLanes": { "letters": ["C", "H", "O", "G"], "y0": 0.22, "y1": 0.34, "dividerX": [0.32, 0.39, 0.46, 0.53, 0.60], "dividerThickness": 0.008, "laneWidth": 0.07 },
+  "cryptPortal": { "x": 0.4625, "y": 0.45, "radius": 0.04, "type": "sensor", "holdSeconds": 1.0, "note": "Captures the ball, plays the portal effect, ejects it back down toward the bumpers." },
+  "drainSensor": { "x0": 0.0, "x1": 0.925, "y0": 1.96, "y1": 2.2 },
+  "feel": { "stuckBallSeconds": 3.0, "stuckSpeed": 0.05, "stuckAction": "Gently eject the ball upward from the nearest free point and flash a message." },
+  "validation": [
+    "No collider may overlap another collider (except sensors).",
+    "A ball released at the plunger at full charge must reach the playfield.",
+    "A ball dropped from the top-center must reach the flippers in 1.2 to 1.8 seconds.",
+    "A well-timed flipper hit must be able to send the ball to the top arch.",
+    "Every ghost, bumper and lane must be reachable by some flipper shot."
+  ]
+}

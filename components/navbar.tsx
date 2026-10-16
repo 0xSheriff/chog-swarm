@@ -79,10 +79,10 @@ export function Navbar() {
             </div>
             <div>
               <span className="font-koulen text-2xl tracking-wide text-white flex items-center gap-1.5">
-                CHOG <span className="text-chog-purple">HAUNTED</span>
+                CHOG <span className="text-chog-purple">SWARM</span>
               </span>
               <span className="block text-[10px] font-mono tracking-widest text-chog-muted uppercase -mt-1">
-                Halloween Pinball
+                Haunted Pinball
               </span>
             </div>
           </Link>
@@ -109,22 +109,6 @@ export function Navbar() {
 
           {/* Wallet & Controls */}
           <div className="flex items-center gap-2.5">
-            {/* Disconnect Test Switch */}
-            <button
-              onClick={toggleDisconnectTest}
-              title="Toggle Disconnect Test to simulate missing NFT ownership"
-              className={`px-2.5 py-1 rounded-lg text-[11px] font-mono border flex items-center gap-1.5 transition-colors ${
-                disconnectTestActive
-                  ? 'bg-red-950/60 border-red-500/50 text-red-300 animate-pulse'
-                  : 'bg-chog-surface1 border-chog-line text-chog-muted hover:text-white hover:border-chog-lineBright'
-              }`}
-            >
-              <Shield className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Disconnect Test:</span>
-              <span className={disconnectTestActive ? 'font-bold text-red-400' : 'text-green-400 font-medium'}>
-                {disconnectTestActive ? 'NFT DISCONNECTED' : 'NORMAL'}
-              </span>
-            </button>
 
             {/* $CHOG token balance pill */}
             {isConnected && Number(chogBal.replace(/,/g, '')) > 0 && (
