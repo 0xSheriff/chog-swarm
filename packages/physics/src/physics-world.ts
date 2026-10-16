@@ -46,6 +46,7 @@ export interface PhysicsWorldInstance {
   getBallState: () => BallState;
   getAllBallStates: () => BallState[];
   getFlipperAnglesDeg: () => { left: number; right: number };
+  getFlipperVertices: (side: 'left' | 'right') => [number, number][];
   onDrain?: () => void;
   onExtraBallDrain?: (remaining: number) => void;
   onBumperHit?: (id: string, score: number) => void;
@@ -229,10 +230,10 @@ export function createPhysicsWorld(layout: TableLayout): PhysicsWorldInstance {
 
     const anchorBody = world.createBody({ type: 'static', position: pivot });
 
-    const rad1 = (spec.restAngle * Math.PI) / 180;
-    const rad2 = (spec.upAngle * Math.PI) / 180;
-    const lowerAngle = Math.min(rad1, rad2);
-    const upperAngle = Math.max(rad1, rad2);
+    const deltaRad = ((spec.upAngle - spec.restAngle) * Math.PI) / 180;
+    const lowerAngle = Math.min(0, deltaRad);
+    const upperAngle = Math.max(0, deltaRad);
+    const initialRestSpeed = side === 'left' ? layout.flippers.swingDownRadPerSec : -layout.flippers.swingDownRadPerSec;
 
     const joint = world.createJoint(
       pl.RevoluteJoint(
@@ -242,7 +243,7 @@ export function createPhysicsWorld(layout: TableLayout): PhysicsWorldInstance {
           upperAngle,
           enableMotor: true,
           maxMotorTorque: 50000.0,
-          motorSpeed: 0,
+          motorSpeed: initialRestSpeed,
         },
         anchorBody,
         body,
@@ -313,6 +314,7 @@ export function createPhysicsWorld(layout: TableLayout): PhysicsWorldInstance {
     getBallState: () => ({ x: 0, y: 0, vx: 0, vy: 0, speed: 0 }),
     getAllBallStates: () => [],
     getFlipperAnglesDeg: () => ({ left: 0, right: 0 }),
+    getFlipperVertices: () => [],
   };
 
   // Pre-solve for One-Way Gate
@@ -482,6 +484,9 @@ export function createPhysicsWorld(layout: TableLayout): PhysicsWorldInstance {
 
   // Flipper motors
   instance.setLeftFlipper = (up: boolean) => {
+    if (typeof window !== 'undefined') {
+      (window as any).__lastFlipperCall = { up, time: performance.now() };
+    }
     const speed = up ? -layout.flippers.swingUpRadPerSec : layout.flippers.swingDownRadPerSec;
     leftFlipperJoint.setMotorSpeed(speed);
   };
@@ -574,6 +579,21 @@ export function createPhysicsWorld(layout: TableLayout): PhysicsWorldInstance {
       left: (leftRad * 180) / Math.PI,
       right: (rightRad * 180) / Math.PI,
     };
+  };
+
+  instance.getFlipperVertices = (side: 'left' | 'right'): [number, number][] => {
+    const body = side === 'left' ? leftFlipperBody : rightFlipperBody;
+    const fix = body.getFixtureList();
+    if (!fix) return [];
+    const shape = fix.getShape() as any;
+    const count = shape.m_count || 0;
+    const verts: [number, number][] = [];
+    for (let i = 0; i < count; i++) {
+      const v = shape.m_vertices[i];
+      const wp = body.getWorldPoint(v);
+      verts.push([fromP(wp.x), fromP(wp.y)]);
+    }
+    return verts;
   };
 
   return instance;

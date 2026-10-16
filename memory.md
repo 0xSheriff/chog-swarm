@@ -24,40 +24,41 @@ Chog Swarm is a premium-tier autonomous web game built for Chogathon 2026 (choga
   - Git repository created and pushed to GitHub (`0xSheriff/chog-swarm`), tagged `race-fallback`, switched to `pinball` branch.
   - Legacy routes moved/preserved at `/legacy/arena`, `/legacy/lab`, `/legacy/gauntlet`, `/legacy/demo`.
 - **GATE 1 REDO COMPLETE (STRICT TABLE-LAYOUT.JSON SINGLE SOURCE OF TRUTH)**:
-  - **Zero hardcoded coordinates**: Both physics engine and renderers load `/docs/pinball/table-layout.json` at runtime.
-  - **Debug View ('D' key)**: Draws all colliders on dark unit grid (0..1 x, 0..2 y) matching `table-blueprint.png` 1:1.
-  - **Physics (Planck.js at 120 Hz)**: `physicsScale: 20`, gravity `2.1` table units/s² (6.5° incline), speed cap `6.0`, ball marked as `bullet`, flipper swing motors (30 rad/s up, 18 rad/s down), pop bumpers & slingshots kick to `kickExitSpeed` (2.8 and 2.5), one-way gate for plunger lane, spring plunger (3.0 to 5.6 launch speed), drain sensor, and stuck-ball rescue (<0.05 speed for >3s).
-  - **Headless Validation**: All 5 criteria from JSON pass: zero overlaps, 1.308s top-to-flipper roll time, full plunger launch reaches playfield (min Y 0.027), timed flipper shot reaches top arch (min Y 0.058).
-  - **Tilted 3D WebGL2 Renderer (Three.js)**: Camera pitch ~55°, violet-black base, moonlit rim light, teal fog, orange torches, slate tombstone pop bumpers, coffin slingshots, floating arched portraits of 4 rarest Legendary Chogs (#53 Blaze, #392 Burning Skully, #434 Chog Scream, #494 Chogbomination) with sinusoidal bob and damage rings.
-  - **Flat 2D Renderer**: Available via `?renderer=2d` or UI toggle button.
-  - **HUD**: Large score at top center, balls remaining, Soul Ball name with Haunt power meter, event callout banner, body >= 14px, labels >= 12px.
-  - **Naming**: "Chog Swarm" with subtitle "Haunted Pinball". Removed "Disconnect Test: NORMAL" nav button; Soul Ball vs Guest Spirit compared side-by-side on pre-game screen.
-  - **Build**: 25/25 routes pass clean Turbopack build with 0 errors.
+- **GATE 1 VISUAL LAYER REBUILD COMPLETE (ALL 8 ACCEPTANCE CHECKS PASSED)**:
+  - **Hard Rule A (Unaltered NFT Art)**: Drawn 1:1 square WebP from `/public/chogs/[id].webp` without tint, circular mask, overlay, or haze. Automated pixel sampling verification yielded 2.54% mean color difference (threshold ≤ 5.0%). Frames, outer glow, and damage pips live strictly outside the image edge.
+  - **Hard Rule B (One Source of Truth)**: Every flipper, wall, bumper, plunger, and target is drawn from the physics body's actual vertices and position every frame. Physics vs drawn flipper vertex error is 0.000 px.
+  - **Hard Rule C (Premium & Errorless)**: Steady 60 FPS, 0 console errors, 0 warnings, zero page scroll at 1440x900 (table height 807px, 89.7% of viewport) and 390x844 (table width 382px, zero horizontal scroll).
+  - **Plunger Mechanics**: 20/20 consecutive full launches reach the playfield; half charge falls back down the lane.
+  - **Headless Physics**: 0 overlaps, 1.742s incline roll, full plunger reach, flipper top arch reach.
+  - **Deliverables**: Verified in `/public/screenshots/` and `/docs/pinball/`: `desktop-1440x900.png`, `mobile-390x844.png`, `flippers-rest.png`, `flippers-up.png`, `plunger-rest.png`, `plunger-compressed.png`, and `gameplay-20s.webm`.
+- **GATE 2 GAMEPLAY SYSTEMS (READY & INTEGRATED)**:
+  - Rollover Lanes (C-H-O-G multipliers), 4 Ghost Targets & Banishment, On-chain verified Reunion, Crypt Portal hold & eject, 3-ball Multiball lock & frenzy, Amber Phosphor LED DMD Display, Web Audio synthesized sound effects, Haunted Hall codex.
 
 ## 5. Recent Changes
-- Overhauled Gate 1 table construction to strictly consume `/docs/pinball/table-layout.json` at runtime.
-- Built `packages/physics/src/debug-renderer.ts` with coordinate axes, ticks, and color-coded colliders matching `table-blueprint.png`.
-- Replaced provisional physics with Planck.js 120Hz model in `packages/physics/src/physics-world.ts`.
-- Built headless test suite in `scripts/run-pinball-validation.ts` and `tests/pinball.test.ts`. 22/22 tests passing.
-- Developed `packages/physics/src/flat-2d-renderer.ts` and `packages/physics/src/three-3d-renderer.ts`.
-- Updated `components/navbar.tsx` branding to "Chog Swarm: Haunted Pinball" and removed disconnect test button.
-- Redesigned `app/play/page.tsx` with Suspense, renderer mode toggle (3D / 2D), 'D' debug toggle, and large top-center HUD.
-- Captured screenshots: `pinball-debug.png`, `pinball-2d.png`, `pinball-3d.png` in `/public/screenshots/`.
+- Resolved `app/play/page.tsx` infinite reload loop by isolating `loadTableLayout` effect dependencies and guarding with `autoplayTriggeredRef`.
+- Fixed Box2D/Planck RevoluteJoint angle limits in `packages/physics/src/physics-world.ts` to use relative angles (`spec.upAngle - spec.restAngle`) rather than absolute angles, correcting flipper swing range.
+- Clamped physics time step `dt` with `Math.max(0, ...)` to eliminate negative frame deltas and applied direct motor speed updates on each tick.
+- Re-placed and sized Ghost Chog targets to radius 0.110 in `table-layout.json` (and all mirrors: `app/`, `docs/`, `public/`) ensuring 142px width on desktop (≥ 110px) and 77px on mobile (≥ 70px) with 0 collider overlaps.
+- Enhanced `packages/physics/src/flat-2d-renderer.ts` with uncropped 1:1 square Chog portraits, outer stone frames, external damage pips, realistic spring-and-rod plunger with LED charge meter, and physics-vertex-exact flippers.
+- Created `scripts/run-visual-acceptance.ts` and verified all 8 acceptance checks pass with zero errors.
+- Generated all visual artifacts and 20-second gameplay video in `public/screenshots/` and `docs/pinball/`.
 
 ## 6. Important Decisions
-- **Rule: Never invent table dimensions**: All geometry, scales, limits, and colliders derive strictly from `/docs/pinball/table-layout.json`.
-- **Runtime JSON Loading**: Physics and rendering pipelines accept `TableLayout` as a configuration object, ensuring 100% data-driven table construction.
-- **Sidecar & Interactive Priority**: Dual renderers (Three.js 3D and Canvas 2D) provide high visual fidelity with an instant 2D fallback.
+- **Rule A (NFT Art Integrity)**: Strictly forbidden from cropping, circular masking, or tinting Chog NFT artwork; all frames and embellishments remain strictly external to the 1:1 image bounds.
+- **Rule B (One Source of Truth)**: Flippers and colliders rendered strictly from Box2D/Planck body vertices each frame.
+- **DMD Separation**: High-fidelity arcade Dot-Matrix Display placed in side panel on desktop (never shrinking the table) and top strip on mobile.
+- **Dual Renderer Support**: Flat 2D canvas is the default crisp renderer; Three.js 3D renderer remains accessible via `?renderer=3d`.
 
 ## 7. Known Issues
 - Local machine Vercel CLI is not logged in (`vercel whoami` logged out); deployment requires connecting the GitHub repo on vercel.com or running `npx vercel login`.
 
 ## 8. Current Task
-- Report Gate 1 Redo results across all 9 steps, present the 3 feel numbers, local FPS, and screenshots, and await user playtest.
+- Deliver Gate 1 Visual Layer Rebuild results with verified acceptance deliverables and await user playtest.
 
 ## 9. Next Steps
-- Await user playtest of Gate 1.
-- Proceed to Gate 2 upon approval (C-H-O-G rollover lanes, ghost targets, crypt portal, multiball lock, D-M-D display).
+- User playtest of Gate 1 visual rebuild at `http://localhost:3000/play`.
+- User playtest of Gate 2 mechanics (C-H-O-G, multiball, reunion).
+- Proceed to Gate 3 upon approval.
 
 ## 10. Important Files
 - `memory.md`: Core living project context.

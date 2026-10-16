@@ -47,15 +47,14 @@ export class Three3DRenderer {
     this.container = container;
     this.layout = layout;
 
-    // ── 1. Scene & Fog ──
+    // ── 1. Scene & Clean Lighting (No obscuring fog) ──
     this.scene = new THREE.Scene();
-    this.scene.background = new THREE.Color(0x08060f);
-    this.scene.fog = new THREE.FogExp2(0x0d091a, 0.45);
+    this.scene.background = new THREE.Color(0x090712);
 
-    // ── 2. Camera: Pitch ~55° ──
+    // ── 2. Camera: Pitch <= 25° (Top-down tilted view, playfield fills view) ──
     const aspect = container.clientWidth / container.clientHeight;
-    this.camera = new THREE.PerspectiveCamera(48, aspect, 0.1, 50);
-    this.camera.position.set(0, 1.85, 1.30);
+    this.camera = new THREE.PerspectiveCamera(42, aspect, 0.1, 50);
+    this.camera.position.set(0, 2.45, 0.42);
     this.camera.lookAt(0, 0, 0.05);
 
     // ── 3. WebGL2 Renderer ──
@@ -266,7 +265,7 @@ export class Three3DRenderer {
       shape.closePath();
 
       const extrudeGeo = new THREE.ExtrudeGeometry(shape, { depth: 0.04 });
-      extrudeGeo.rotateX(Math.PI / 2);
+      extrudeGeo.rotateX(-Math.PI / 2);
       const mesh = new THREE.Mesh(extrudeGeo, mat);
       this.scene.add(mesh);
     });
@@ -280,21 +279,20 @@ export class Three3DRenderer {
       const pos = this.to3D(gt.x, gt.y, 0.06);
       group.position.copy(pos);
 
-      // Glowing arched torus frame
-      const frameGeo = new THREE.TorusGeometry(gt.radius, 0.006, 8, 24);
-      const frameMat = new THREE.MeshBasicMaterial({ color: 0x06b6d4 });
+      // Outer frame (rectangular border strictly outside the square)
+      const frameGeo = new THREE.BoxGeometry(gt.radius * 2.08, 0.01, gt.radius * 2.08);
+      const frameMat = new THREE.MeshBasicMaterial({ color: 0x06b6d4, wireframe: true });
       const frameMesh = new THREE.Mesh(frameGeo, frameMat);
-      frameMesh.rotation.x = -0.5;
       group.add(frameMesh);
 
-      // Portrait texture
+      // Hard Rule A: Portrait texture is 100% full square uncropped WebP
       const ghostData = GHOST_CHOGS[gt.id];
       if (ghostData) {
         textureLoader.load(ghostData.image, (tex) => {
-          const planeGeo = new THREE.CircleGeometry(gt.radius * 0.9, 24);
+          const planeGeo = new THREE.PlaneGeometry(gt.radius * 2, gt.radius * 2);
           const planeMat = new THREE.MeshBasicMaterial({ map: tex });
           const portrait = new THREE.Mesh(planeGeo, planeMat);
-          portrait.rotation.x = -0.5;
+          portrait.rotation.x = -Math.PI / 2;
           group.add(portrait);
         });
       }

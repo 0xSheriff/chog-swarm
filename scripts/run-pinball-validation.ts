@@ -44,7 +44,7 @@ export async function runValidationSuite(): Promise<ValidationReport> {
   // Per layout.gravityNote: 2.1 table units/s² simulates a 6.5° incline where a roll from top to flippers takes ~1.2 to 1.8s.
   // We measure the direct roll from top arch base down the playfield lane to flipper height (y=1.76).
   const dropWorld = createPhysicsWorld(layout);
-  dropWorld.ball.setPosition(pl.Vec2(0.70 * S, 0.06 * S));
+  dropWorld.ball.setPosition(pl.Vec2(0.745 * S, 0.06 * S));
   dropWorld.ball.setLinearVelocity(pl.Vec2(0, 0));
 
   let fallTimeSec = 0;
@@ -77,9 +77,9 @@ export async function runValidationSuite(): Promise<ValidationReport> {
 
   // ── 4. Well-Timed Flipper Shot (Must reach top arch y <= 0.20) ──
   const flipperWorld = createPhysicsWorld(layout);
-  flipperWorld.ball.setPosition(pl.Vec2(0.56 * S, 1.77 * S));
-  flipperWorld.ball.setLinearVelocity(pl.Vec2(-0.10 * S, 0.70 * S));
-  flipperWorld.setRightFlipper(true);
+  flipperWorld.ball.setPosition(pl.Vec2(0.37 * S, 1.78 * S));
+  flipperWorld.ball.setLinearVelocity(pl.Vec2(0, 0.5 * S));
+  flipperWorld.setLeftFlipper(true);
 
   let flipperMinY = 2.0;
   let flipperReachesTopArch = false;

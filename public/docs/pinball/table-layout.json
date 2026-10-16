@@ -16,12 +16,12 @@
     "rightApron": { "type": "line", "from": [0.925, 1.68], "to": [0.635, 1.83] },
     "oneWayGate": { "type": "gate", "from": [0.925, 0.30], "to": [0.925, 0.40], "passes": "up", "note": "Ball may travel up through the gap from the lane, then cannot re-enter the lane." }
   },
-  "plunger": { "x": 0.9625, "restY": 1.94, "travel": 0.10, "launchSpeedMin": 3.0, "launchSpeedMax": 5.6, "note": "Full charge must carry the ball up the lane and around the arch to the playfield." },
+  "plunger": { "x": 0.9625, "restY": 1.94, "travel": 0.10, "launchSpeedMin": 0.5, "launchSpeedMax": 4.6, "note": "Full charge carries ball around top arch into playfield; half charge does not reach arch." },
   "flippers": {
-    "left":  { "pivot": [0.29, 1.83],  "length": 0.15, "baseRadius": 0.016, "tipRadius": 0.009, "restAngle": 25,  "upAngle": -30 },
-    "right": { "pivot": [0.635, 1.83], "length": 0.15, "baseRadius": 0.016, "tipRadius": 0.009, "restAngle": 155, "upAngle": 210 },
+    "left":  { "pivot": [0.29, 1.83],  "length": 0.136, "baseRadius": 0.020, "tipRadius": 0.010, "restAngle": 25,  "upAngle": -30 },
+    "right": { "pivot": [0.635, 1.83], "length": 0.136, "baseRadius": 0.020, "tipRadius": 0.010, "restAngle": 155, "upAngle": 210 },
     "swingUpRadPerSec": 30, "swingDownRadPerSec": 18,
-    "note": "Gap between the resting tips is about 0.07, which is 1.4 ball diameters. The ball can drain through it."
+    "note": "Gap between the resting tips is about 0.099, allowing clean drainage between them when resting."
   },
   "slingshots": [
     { "id": "left",  "verts": [[0.10, 1.46], [0.10, 1.66], [0.235, 1.71]], "kickFace": [0, 2], "kickExitSpeed": 2.5 },
@@ -33,12 +33,12 @@
     { "id": "b3", "x": 0.46, "y": 0.80, "radius": 0.043, "kickExitSpeed": 2.8 }
   ],
   "ghostTargets": [
-    { "id": "g1", "x": 0.14, "y": 0.48, "radius": 0.05 },
-    { "id": "g2", "x": 0.78, "y": 0.48, "radius": 0.05 },
-    { "id": "g3", "x": 0.15, "y": 1.05, "radius": 0.05 },
-    { "id": "g4", "x": 0.77, "y": 1.05, "radius": 0.05 }
+    { "id": "g1", "x": 0.13, "y": 0.42, "radius": 0.110 },
+    { "id": "g2", "x": 0.795, "y": 0.42, "radius": 0.110 },
+    { "id": "g3", "x": 0.14, "y": 1.05, "radius": 0.110 },
+    { "id": "g4", "x": 0.785, "y": 1.05, "radius": 0.110 }
   ],
-  "ghostNote": "Ghost Chogs. Hits register as damage, the ball bounces off. Ghosts may drift up to 0.04 around their anchor using their trait-compiled policy. They must never overlap a wall or bumper.",
+  "ghostNote": "Ghost Chogs. Hits register as damage, the ball bounces off with restitution. Physical and visible radius are equal (0.110). Never overlaps another collider.",
   "rolloverLanes": { "letters": ["C", "H", "O", "G"], "y0": 0.22, "y1": 0.34, "dividerX": [0.32, 0.39, 0.46, 0.53, 0.60], "dividerThickness": 0.008, "laneWidth": 0.07 },
   "cryptPortal": { "x": 0.4625, "y": 0.45, "radius": 0.04, "type": "sensor", "holdSeconds": 1.0, "note": "Captures the ball, plays the portal effect, ejects it back down toward the bumpers." },
   "drainSensor": { "x0": 0.0, "x1": 0.925, "y0": 1.96, "y1": 2.2 },

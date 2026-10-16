@@ -42,12 +42,12 @@ interface OwnedChog {
 
 function PlayPageContent() {
   const searchParams = useSearchParams();
-  const force2D = searchParams.get('renderer') === '2d';
+  const force3D = searchParams.get('renderer') === '3d';
   const { address, isConnected } = useAccount();
 
   // Layout & Config
   const [layout, setLayout] = useState<TableLayout | null>(null);
-  const [rendererMode, setRendererMode] = useState<'3d' | '2d'>(force2D ? '2d' : '3d');
+  const [rendererMode, setRendererMode] = useState<'3d' | '2d'>(force3D ? '3d' : '2d');
   const [debugView, setDebugView] = useState(false);
 
   // Pre-game selection
@@ -108,32 +108,10 @@ function PlayPageContent() {
     lastTime: 0,
   });
 
-  // ── Load Table Layout at Runtime ──
-  useEffect(() => {
-    loadTableLayout().then((loaded) => {
-      setLayout(loaded);
-    });
-  }, []);
-
-  // ── Load Owned Chogs ──
-  useEffect(() => {
-    if (!address || !isConnected) return;
-    setLoadingChogs(true);
-    fetch(`/api/chogs/owned-by?address=${address}`)
-      .then((r) => r.json())
-      .then((data) => {
-        setOwnedChogs(data.chogs || []);
-        if (data.chogs && data.chogs.length > 0) {
-          setSelectedChog(data.chogs[0]);
-        }
-      })
-      .catch(() => setOwnedChogs([]))
-      .finally(() => setLoadingChogs(false));
-  }, [address, isConnected]);
-
   // ── Start Game Session ──
-  const startGame = useCallback((chog: OwnedChog | null) => {
-    if (!layout) return;
+  const startGame = useCallback((chog: OwnedChog | null, customLayout?: TableLayout) => {
+    const activeLayout = customLayout || layout;
+    if (!activeLayout) return;
     setSelectedChog(chog);
     setScore(0);
     setMultiplier(1);
@@ -152,8 +130,15 @@ function PlayPageContent() {
     sound.startAmbient();
 
     // Create fresh physics world from JSON
-    const pWorld = createPhysicsWorld(layout);
+    const pWorld = createPhysicsWorld(activeLayout);
     physicsRef.current = pWorld;
+
+    if (typeof window !== 'undefined') {
+      (window as any).__pinballPhysics = pWorld;
+      (window as any).__pinballLayout = activeLayout;
+      (window as any).__pinballCanvas = canvas2DRef.current;
+      (window as any).__pinballControls = controlsRef.current;
+    }
 
     const vs = visualStateRef.current;
     vs.score = 0;
@@ -374,13 +359,44 @@ function PlayPageContent() {
 
     // Instantiate Renderers
     if (!renderer2DRef.current) {
-      renderer2DRef.current = new Flat2DRenderer(layout);
+      renderer2DRef.current = new Flat2DRenderer(activeLayout);
     }
     renderer2DRef.current.setSoulBallImage(chog?.image);
+    (window as any).__pinballRenderer2D = renderer2DRef.current;
+    (window as any).__pinballVisualState = vs;
 
     controlsRef.current.lastTime = performance.now();
     controlsRef.current.physicsAccum = 0;
   }, [layout, address]);
+
+  const autoplayTriggeredRef = useRef(false);
+
+  // ── Load Table Layout at Runtime ──
+  useEffect(() => {
+    loadTableLayout().then((loaded) => {
+      setLayout(loaded);
+      if (searchParams.get('autoplay') === '1' && !autoplayTriggeredRef.current) {
+        autoplayTriggeredRef.current = true;
+        startGame(null, loaded);
+      }
+    });
+  }, []); // Run ONCE on mount
+
+  // ── Load Owned Chogs ──
+  useEffect(() => {
+    if (!address || !isConnected) return;
+    setLoadingChogs(true);
+    fetch(`/api/chogs/owned-by?address=${address}`)
+      .then((r) => r.json())
+      .then((data) => {
+        setOwnedChogs(data.chogs || []);
+        if (data.chogs && data.chogs.length > 0) {
+          setSelectedChog(data.chogs[0]);
+        }
+      })
+      .catch(() => setOwnedChogs([]))
+      .finally(() => setLoadingChogs(false));
+  }, [address, isConnected]);
 
   // ── Keyboard Controls & Debug Toggle ('D') ──
   useEffect(() => {
@@ -450,11 +466,14 @@ function PlayPageContent() {
       const physics = physicsRef.current;
       const vs = visualStateRef.current;
 
-      const dt = Math.min((time - ctrl.lastTime) / 1000, 0.05);
+      const dt = ctrl.lastTime === 0 ? FIXED_DT : Math.max(0, Math.min((time - ctrl.lastTime) / 1000, 0.05));
       ctrl.lastTime = time;
 
       // Fixed 120 Hz Physics Step
       if (physics) {
+        physics.setLeftFlipper(ctrl.leftDown);
+        physics.setRightFlipper(ctrl.rightDown);
+
         ctrl.physicsAccum += dt;
         while (ctrl.physicsAccum >= FIXED_DT) {
           if (ctrl.plungerDown) {
@@ -462,8 +481,6 @@ function PlayPageContent() {
             vs.plungerCharge = ctrl.plungerCharge;
           }
 
-          physics.setLeftFlipper(ctrl.leftDown);
-          physics.setRightFlipper(ctrl.rightDown);
           physics.step();
           ctrl.physicsAccum -= FIXED_DT;
         }
@@ -767,38 +784,89 @@ function PlayPageContent() {
 
   // ── Active Gameplay Screen ──
   return (
-    <div className="max-w-4xl mx-auto py-2 px-2 sm:px-4 space-y-3">
-      {/* ── Top Dot-Matrix Display (DMD) ── */}
-      <DMDDisplay
-        score={score}
-        multiplier={multiplier}
-        ballsRemaining={ballsRemaining}
-        activeBallCount={activeBallCount}
-        message={dmdMsg}
-        reunionActive={reunionActive}
-        multiballActive={multiballActive}
-        rolloversLit={rolloversLit}
-      />
+    <div id="play-container" className="fixed inset-x-0 bottom-0 top-[65px] z-30 bg-[#0a0714] overflow-hidden flex flex-col lg:flex-row items-center justify-center p-1 sm:p-2 lg:p-3 gap-2 sm:gap-4">
+      {/* ── Left Side Panel (Desktop only) ── */}
+      <div className="hidden lg:flex flex-col justify-between w-[360px] xl:w-[400px] h-full max-h-[820px] shrink-0 gap-3">
+        {/* DMD Arcade Display */}
+        <DMDDisplay
+          score={score}
+          multiplier={multiplier}
+          ballsRemaining={ballsRemaining}
+          activeBallCount={activeBallCount}
+          message={dmdMsg}
+          reunionActive={reunionActive}
+          multiballActive={multiballActive}
+          rolloversLit={rolloversLit}
+        />
 
-      {/* ── Secondary HUD & Controls Row ── */}
-      <div className="flex items-center justify-between text-xs font-mono px-1">
-        {/* Left: Soul Ball info */}
-        <div className="flex items-center gap-2 bg-chog-card px-3 py-1.5 rounded-lg border border-white/10">
-          <div className="w-2.5 h-2.5 rounded-full bg-chog-purple animate-pulse" />
-          <span className="text-zinc-400">BALL:</span>
-          <span className="text-white font-bold">{selectedChog ? selectedChog.name : 'Guest Spirit'}</span>
+        {/* Soul Ball Status Card */}
+        <div className="bg-chog-card rounded-xl border border-white/10 p-3 space-y-2">
+          <div className="flex items-center justify-between text-xs font-mono">
+            <span className="text-zinc-400">ACTIVE SOUL BALL</span>
+            <span className="px-2 py-0.5 rounded bg-chog-purple/20 text-chog-purpleSoft text-[10px]">
+              {selectedChog ? 'VERIFIED NFT' : 'GUEST SPIRIT'}
+            </span>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-lg bg-black/50 border border-chog-purple/40 overflow-hidden relative shrink-0">
+              {selectedChog?.image ? (
+                <img
+                  src={selectedChog.image}
+                  alt={selectedChog.name}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-zinc-500 font-mono text-xs">
+                  GUEST
+                </div>
+              )}
+            </div>
+            <div className="min-w-0">
+              <h3 className="font-koulen text-lg text-white truncate">
+                {selectedChog ? selectedChog.name : 'Guest Spirit'}
+              </h3>
+              <p className="text-[11px] font-mono text-zinc-400 truncate">
+                {selectedChog ? `Token #${selectedChog.tokenId}` : 'Practice Baseline Mode'}
+              </p>
+            </div>
+          </div>
+          {/* Haunt Power Bar */}
+          <div className="space-y-1 pt-1 border-t border-white/5">
+            <div className="flex justify-between text-[10px] font-mono">
+              <span className="text-zinc-500">HAUNT POWER</span>
+              <span className="text-amber-400 font-bold">{hauntPower}%</span>
+            </div>
+            <div className="w-full h-1.5 bg-black/50 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-gradient-to-r from-purple-500 to-amber-400 rounded-full transition-all duration-300"
+                style={{ width: `${hauntPower}%` }}
+              />
+            </div>
+          </div>
         </div>
 
-        {/* Center: Controls Hint */}
-        <div className="hidden sm:flex items-center gap-3 text-zinc-500">
-          <span><kbd className="px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-300 font-bold">Z</kbd> Left</span>
-          <span><kbd className="px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-300 font-bold">/ or →</kbd> Right</span>
-          <span><kbd className="px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-300 font-bold">SPACE</kbd> Plunge</span>
-          <span><kbd className="px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-300 font-bold">D</kbd> Debug</span>
+        {/* Desktop Controls Cheat Sheet */}
+        <div className="bg-black/40 rounded-xl border border-white/10 p-3 space-y-1.5 text-xs font-mono text-zinc-400">
+          <div className="flex justify-between items-center py-0.5">
+            <span>Left Flipper</span>
+            <kbd className="px-2 py-0.5 rounded bg-zinc-800 text-white font-bold text-[11px]">Z</kbd>
+          </div>
+          <div className="flex justify-between items-center py-0.5">
+            <span>Right Flipper</span>
+            <kbd className="px-2 py-0.5 rounded bg-zinc-800 text-white font-bold text-[11px]">/ or →</kbd>
+          </div>
+          <div className="flex justify-between items-center py-0.5">
+            <span>Plunger Launch</span>
+            <kbd className="px-2 py-0.5 rounded bg-zinc-800 text-white font-bold text-[11px]">SPACE (Hold)</kbd>
+          </div>
+          <div className="flex justify-between items-center py-0.5">
+            <span>Blueprint Debug</span>
+            <kbd className="px-2 py-0.5 rounded bg-zinc-800 text-white font-bold text-[11px]">D</kbd>
+          </div>
         </div>
 
-        {/* Right: Renderer Switcher & FPS */}
-        <div className="flex items-center gap-2">
+        {/* Renderer Mode & FPS & Codex Shortcut */}
+        <div className="flex items-center justify-between text-xs font-mono bg-chog-card px-3 py-2 rounded-xl border border-white/10">
           <span className="text-zinc-500">{fpsDisplay} FPS</span>
           <button
             onClick={() => setRendererMode((prev) => (prev === '3d' ? '2d' : '3d'))}
@@ -806,11 +874,31 @@ function PlayPageContent() {
           >
             {rendererMode === '3d' ? '3D WebGL2' : '2D Canvas'}
           </button>
+          <Link
+            href="/haunted-hall"
+            className="text-chog-purpleSoft hover:text-white underline text-[11px]"
+          >
+            Haunted Hall ↗
+          </Link>
         </div>
       </div>
 
-      {/* ── Table Container ── */}
-      <div className="relative w-full aspect-[1/2] max-h-[78vh] mx-auto rounded-2xl overflow-hidden bg-black border-2 border-chog-purple/50 shadow-2xl shadow-purple-950/40">
+      {/* ── Mobile Top Strip (Mobile only) ── */}
+      <div className="lg:hidden w-full shrink-0 max-w-[420px]">
+        <DMDDisplay
+          score={score}
+          multiplier={multiplier}
+          ballsRemaining={ballsRemaining}
+          activeBallCount={activeBallCount}
+          message={dmdMsg}
+          reunionActive={reunionActive}
+          multiballActive={multiballActive}
+          rolloversLit={rolloversLit}
+        />
+      </div>
+
+      {/* ── Main Table Playfield Container ── */}
+      <div className="relative h-full max-h-[820px] aspect-[1/2] rounded-2xl overflow-hidden bg-black border-2 border-chog-purple/50 shadow-2xl shadow-purple-950/40 shrink-0 flex items-center justify-center">
         {/* 3D WebGL2 Container */}
         {rendererMode === '3d' && !debugView && (
           <div ref={container3DRef} className="w-full h-full" />
@@ -820,31 +908,34 @@ function PlayPageContent() {
         {(rendererMode === '2d' || debugView) && (
           <canvas
             ref={canvas2DRef}
-            width={600}
-            height={1200}
+            width={700}
+            height={1400}
             className="w-full h-full object-contain"
           />
         )}
 
-        {/* Mobile Touch Overlay Controls */}
+        {/* Mobile / Pointer Touch Overlay Controls */}
         <div className="absolute inset-0 flex pointer-events-auto">
           {/* Left Flipper Half */}
           <div
-            className="w-5/12 h-full opacity-0 active:opacity-10 bg-purple-500/20 transition-opacity"
-            onTouchStart={() => handleTouch('left', true)}
-            onTouchEnd={() => handleTouch('left', false)}
+            className="w-5/12 h-full opacity-0 active:opacity-15 bg-purple-500/20 transition-opacity cursor-pointer"
+            onPointerDown={() => handleTouch('left', true)}
+            onPointerUp={() => handleTouch('left', false)}
+            onPointerLeave={() => handleTouch('left', false)}
           />
           {/* Plunger Strip */}
           <div
-            className="w-2/12 h-full opacity-0 active:opacity-20 bg-amber-500/30 transition-opacity"
-            onTouchStart={() => handleTouch('plunger', true)}
-            onTouchEnd={() => handleTouch('plunger', false)}
+            className="w-2/12 h-full opacity-0 active:opacity-25 bg-amber-500/30 transition-opacity cursor-pointer"
+            onPointerDown={() => handleTouch('plunger', true)}
+            onPointerUp={() => handleTouch('plunger', false)}
+            onPointerLeave={() => handleTouch('plunger', false)}
           />
           {/* Right Flipper Half */}
           <div
-            className="w-5/12 h-full opacity-0 active:opacity-10 bg-purple-500/20 transition-opacity"
-            onTouchStart={() => handleTouch('right', true)}
-            onTouchEnd={() => handleTouch('right', false)}
+            className="w-5/12 h-full opacity-0 active:opacity-15 bg-purple-500/20 transition-opacity cursor-pointer"
+            onPointerDown={() => handleTouch('right', true)}
+            onPointerUp={() => handleTouch('right', false)}
+            onPointerLeave={() => handleTouch('right', false)}
           />
         </div>
       </div>
