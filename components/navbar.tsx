@@ -41,12 +41,11 @@ export function Navbar() {
   };
 
   const navLinks = [
-    { href: '/', label: 'Overview' },
-    { href: '/arena', label: 'Arena' },
-    { href: '/lab', label: 'Trait Lab' },
-    { href: '/gauntlet', label: 'Daily Gauntlet' },
+    { href: '/play', label: 'Play' },
+    { href: '/daily-haunting', label: 'Daily Haunting' },
+    { href: '/haunted-hall', label: 'Haunted Hall' },
     { href: '/leaderboard', label: 'Leaderboard' },
-    { href: '/demo', label: 'Recorded Fallback' },
+    { href: '/how-it-works', label: 'How It Works' },
   ];
 
   return (
@@ -57,7 +56,7 @@ export function Navbar() {
           <div className="flex items-center gap-2 text-center sm:text-left">
             <AlertCircle className="w-4 h-4 text-amber-400 flex-shrink-0 animate-pulse" />
             <span>
-              Wrong Network: Connected to Chain ID {chainId}. Chog Swarm requires Monad Mainnet (Chain ID 143).
+              Wrong Network: Connected to Chain ID {chainId}. Chog requires Monad Mainnet (Chain ID 143).
             </span>
           </div>
           <button
@@ -75,15 +74,15 @@ export function Navbar() {
           <Link href="/" className="flex items-center gap-3 group">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-chog-purple to-chog-purpleSoft p-0.5 shadow-lg shadow-chog-purple/20">
               <div className="w-full h-full bg-chog-card rounded-[10px] flex items-center justify-center text-chog-purple group-hover:scale-105 transition-transform">
-                <Zap className="w-5 h-5 text-chog-purple fill-chog-purple" />
+                <Sparkles className="w-5 h-5 text-chog-purple" />
               </div>
             </div>
             <div>
               <span className="font-koulen text-2xl tracking-wide text-white flex items-center gap-1.5">
-                CHOG <span className="text-chog-purple">SWARM</span>
+                CHOG <span className="text-chog-purple">HAUNTED</span>
               </span>
               <span className="block text-[10px] font-mono tracking-widest text-chog-muted uppercase -mt-1">
-                Autonomous Agent Arena
+                Halloween Pinball
               </span>
             </div>
           </Link>

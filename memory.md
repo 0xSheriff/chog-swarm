@@ -17,49 +17,46 @@ Chog Swarm is a premium-tier autonomous web game built for Chogathon 2026 (choga
 - **Styling**: Tailwind CSS / CSS Modules with custom Chog design tokens (dark graphite base, authentic Chog brand accents, warm neutrals, bespoke typography)
 
 ## 4. Current State
-- **ALL 6 FIX PASS PHASES COMPLETE & FULLY VERIFIED**:
-  - **Phase 1 (Images)**: 1,969 local 512px WebP images in `/public/chogs/{id}.webp`, SVG fallback, build verification script in `package.json`.
-  - **Phase 2 (Favicon & Brand)**: `/app/icon.png`, `/app/apple-icon.png`, `/app/favicon.ico`, Open Graph tags & image, metadata configured.
-  - **Phase 3 (Honest Data)**: Zero seeded rows, contract addresses forbidden, designed empty state, real on-chain owner checks, Firestore + persistent disk fallback.
-  - **Phase 4 (Wallet)**: RainbowKit modal, Monad Mainnet (Chain ID 143), network switch prompt, NFT selector, server-side re-simulation on spawn & score submit, viem signed proofs.
-  - **Phase 5 (Clarity)**: 3-step "How it works" on landing, first-visit overlay in arena, full interactive tile legend, 1-sentence goals on all modes, pre-match turn 0 cars on grid, auto-run on first load, typography (body >= 14px, labels >= 12px, mono for numbers/hashes/logs), full screen width (1680px max-width), large Chog art in inspector.
-  - **Phase 6 (Race Mode - Primary Mode)**:
-    - Pure deterministic ruleset `race-v1` with closed-circuit 14x14 track, start grid, 3 sequential checkpoints (CP1, CP2, CP3), checkered finish line, boost pads (`+BOOST`), oil slicks, risky shortcut corridor, turbo fuel management, and slipstream drafting.
-    - Traits mapped: Speed -> top speed & sprints; Risk -> shortcut tendency; Cooperation -> slipstream drafting & slingshot pass; Special Action -> turbo burst ignition.
-    - 4-car championship races with live circuit rank badges (`1st`, `2nd`, `3rd`, `4th`), live fuel gauges, and flame trails.
-    - Balance benchmark across 1,000 championship races: Sprinter 25.0%, Safe Cruiser 19.2%, Shortcut Daredevil 34.6%, Drafting Tactician 21.2% (spread 19%–35%, no trait dominates).
-    - Daily Gauntlet updated to daily track seed scored by fastest finish time, server re-simulated with anti-cheat verification and cryptographic signatures.
-    - Trait Lab updated to race-v1 track with counterfactual mutation and prominent first-divergence detection & jump-to-turn controls.
-    - Classic grid ruleset `v1.0` untouched and versioned for full backward compatibility.
-    - 8/8 unit tests pass in Vitest; production build passes with 0 errors.
+- **SAFETY NET & HARDENING COMPLETE**:
+  - `lib/constants.ts` canonical single source of truth for contracts (`0xc96d...3763` and `0x3500...7777`).
+  - Unit tests reject contract addresses as players (21/21 Vitest tests pass).
+  - Server-side multicall owner snapshot (`lib/chog-snapshot.ts` & `/api/chogs/owned-by`).
+  - Git repository created and pushed to GitHub (`0xSheriff/chog-swarm`), tagged `race-fallback`, switched to `pinball` branch.
+  - Legacy routes moved/preserved at `/legacy/arena`, `/legacy/lab`, `/legacy/gauntlet`, `/legacy/demo`.
+- **PINBALL PIVOT GATE 1 COMPLETE (Playable Prototype)**:
+  - Framework-free 2D Planck.js physics engine in `packages/physics` running at fixed 120 Hz (`table.ts`, `renderer.ts`).
+  - Portrait pinball table with dual flippers, spring plunger, 3 tombstone pop bumpers with glowing impact feedback, 2 coffin slingshots, drain detection, and HUD.
+  - Controls: Keyboard (Z, /, Space) + touch-friendly screen zones.
+  - Soul Ball selection from wallet-owned Chogs with trait-derived ball physics (mass, restitution, density) + Guest Spirit fallback ball.
+  - Navigation updated: Play, Daily Haunting, Haunted Hall, Leaderboard, How It Works.
+  - Production build verified with Turbopack (25/25 routes static/dynamic).
 
 ## 5. Recent Changes
-- Completed Phase 6 (Race Mode):
-  - Authored `packages/engine/src/race-engine.ts` with complete track generation, checkpoint progression, physics, drafting, and checksum calculations.
-  - Extended `packages/engine/src/types.ts` and `packages/engine/src/engine.ts` to dispatch `race-v1`.
-  - Implemented high-fidelity `renderRaceMode` in `components/arena-canvas.tsx` with asphalt texturing, energy gates, boost chevrons, and aerodynamic racer sprites.
-  - Updated `app/arena/page.tsx`, `app/gauntlet/page.tsx`, and `app/lab/page.tsx` to `race-v1`.
-  - Updated `app/api/gauntlet/submit/route.ts` and `lib/leaderboard-store.ts` for finish time scoring and 4-car server re-simulation.
-  - Verified 1,000-race Monte Carlo simulation via `scripts/race-balance-test.ts`.
-  - Verified 8/8 unit tests in `tests/race.test.ts` and `tests/engine.test.ts`.
-  - Built and verified production Next.js bundle with all 16 routes.
-  - Captured full-resolution screenshots of every page in `/public/screenshots/`.
+- Implemented `lib/constants.ts`, `lib/chain-verify.ts`, `lib/chog-snapshot.ts`.
+- Created `/api/chogs/owned-by` route for server-side cached multicall ownership discovery.
+- Added 13 unit tests for address rejection in `tests/constants.test.ts`. Total test suite: 21 passing tests.
+- Tagged `race-fallback` and pushed to GitHub (`https://github.com/0xSheriff/chog-swarm.git`).
+- Created branch `pinball`.
+- Created `packages/physics/` containing Planck.js physics engine and custom Canvas renderer.
+- Built `/play` page with Soul Ball selection, real Chog art rendering on ball, touch and keyboard controls.
+- Added `/how-it-works`, `/daily-haunting`, `/haunted-hall` pages.
+- Moved and preserved previous race/arena modes under `/legacy`.
 
 ## 6. Important Decisions
-- **Race Mode as Primary Game Loop**: `race-v1` ruleset is default in Arena, Gauntlet, and Trait Lab, while `v1.0` is preserved for historical and offline replay safety.
-- **Sequential Checkpoint Enforcement**: Racers must clear CP1 -> CP2 -> CP3 in exact order before the finish line registers.
-- **Finish Time Metric**: Leaderboard prioritizes lowest finish turn (earliest cross of the line) with total match score as the tiebreaker.
-- **Dynamic Shortcut Navigation**: When an agent commits to the high-risk shortcut, targeting switches dynamically from shortcut entrance to apex to exit, avoiding backward ping-pong.
-- **Cryptographic Score Attestation**: Every submitted leaderboard entry requires a wallet signature binding address + seed + score + checksum, validated on the server via viem `verifyMessage`.
+- **Pinball Pivot as Primary Game Loop**: Pivot from grid arena to fast-paced Halloween pinball ("Chog Haunted").
+- **Strict Gate Progression**: Gate 1 is a playable 2D physics prototype with Soul Ball selection. Stopping at Gate 1 for user playtest.
+- **Framework-Free Physics Engine**: Planck.js world in `packages/physics` runs independently of React/DOM for deterministic server verification.
+- **Trait-to-Physics Mapping**: Chog traits directly determine ball mass, restitution, and powers; Guest Spirit provides a baseline ball without traits for non-holders.
 
 ## 7. Known Issues
-- None.
+- Local machine Vercel CLI is not logged in (`vercel whoami` logged out); deployment requires connecting the GitHub repo on vercel.com or running `npx vercel login`.
 
 ## 8. Current Task
-- Deliver comprehensive Final Report for FIX PASS FOR CHOG SWARM covering fixes per phase, test limitations without real wallet, and page screenshots.
+- Gate 1 Playtest handoff: Present live prototype, report on safety net and hardening items, and wait for playtest feedback before Gate 2.
 
 ## 9. Next Steps
-- Present the final report to the user.
+- Await user playtest of Gate 1.
+- Proceed to Gate 2 upon approval (C-H-O-G rollover lanes, ghost targets, crypt portal, multiball lock, D-M-D display).
 
 ## 10. Important Files
 - `memory.md`: Core living project context.

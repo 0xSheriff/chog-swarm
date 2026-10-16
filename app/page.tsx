@@ -35,42 +35,32 @@ export default function LandingPage() {
         </div>
 
         <h1 className="font-koulen text-5xl sm:text-7xl lg:text-8xl tracking-tight text-white leading-[0.95] max-w-4xl">
-          EACH CHOG SHAPES AN <br />
+          PINBALL HAUNTED BY <br />
           <span className="text-transparent bg-clip-text bg-gradient-to-r from-chog-purple via-chog-purpleSoft to-chog-cheek">
-            AUTONOMOUS SWARM
+            REAL RARE CHOGS
           </span>
         </h1>
 
         <p className="text-base sm:text-lg text-chog-text/90 max-w-2xl mt-6 leading-relaxed">
-          The Chog NFT is strictly essential. Your token’s real on-chain traits compile into an autonomous agent policy inside a pure deterministic tactical arena.
+          Launch your own Chog as the Soul Ball — its real on-chain traits shape mass, bumper impact, and Haunt Powers. Or play instantly as a Guest Spirit.
         </p>
 
         {/* CTA Buttons */}
         <div className="flex flex-wrap items-center justify-center gap-4 mt-8">
-          {isConnected ? (
-            <button
-              onClick={() => setIsModalOpen(true)}
-              className="px-8 py-3.5 rounded-xl bg-gradient-to-r from-chog-purple to-chog-purpleSoft hover:from-chog-purple hover:to-chog-purple text-white font-koulen text-xl tracking-wider shadow-lg shadow-chog-purple/30 flex items-center gap-2.5 transition-all transform hover:-translate-y-0.5 cursor-pointer"
-            >
-              <Zap className="w-5 h-5 fill-white" />
-              CHOOSE YOUR CHOG & SPAWN
-            </button>
-          ) : (
-            <button
-              onClick={() => connect({ connector: injected() })}
-              className="px-8 py-3.5 rounded-xl bg-gradient-to-r from-chog-purple to-chog-purpleSoft hover:from-chog-purple hover:to-chog-purple text-white font-koulen text-xl tracking-wider shadow-lg shadow-chog-purple/30 flex items-center gap-2.5 transition-all transform hover:-translate-y-0.5 cursor-pointer"
-            >
-              <Zap className="w-5 h-5 fill-white" />
-              CONNECT WALLET TO SPAWN
-            </button>
-          )}
+          <Link
+            href="/play"
+            className="px-8 py-3.5 rounded-xl bg-gradient-to-r from-chog-purple to-chog-purpleSoft hover:from-chog-purple hover:to-chog-purple text-white font-koulen text-xl tracking-wider shadow-lg shadow-chog-purple/30 flex items-center gap-2.5 transition-all transform hover:-translate-y-0.5 cursor-pointer"
+          >
+            <Zap className="w-5 h-5 fill-white" />
+            PLAY CHOG HAUNTED
+          </Link>
 
           <Link
-            href="/demo"
+            href="/how-it-works"
             className="px-6 py-3.5 rounded-xl bg-chog-surface1 border border-chog-line hover:border-chog-lineBright text-white font-koulen text-xl tracking-wider flex items-center gap-2 transition-all"
           >
-            <Play className="w-4 h-4 fill-white" />
-            TRY RECORDED FALLBACK
+            <Sparkles className="w-4 h-4 text-chog-purple" />
+            HOW IT WORKS
           </Link>
         </div>
 
