@@ -1,0 +1,51 @@
+{
+  "name": "CHOG #834",
+  "description": "CHOG — a 1969-piece collection on Monad.",
+  "image": "ipfs://bafybeihau2egcccbdxymeckmmbrqytbfor5gkt3en6d5fsbueymdbq7g6e/834.webp",
+  "attributes": [
+    {
+      "trait_type": "Background",
+      "value": "Radioactive"
+    },
+    {
+      "trait_type": "Aura",
+      "value": "Burning Aura"
+    },
+    {
+      "trait_type": "Base",
+      "value": "Radioactive"
+    },
+    {
+      "trait_type": "Skin",
+      "value": "Red"
+    },
+    {
+      "trait_type": "Side",
+      "value": "Left"
+    },
+    {
+      "trait_type": "Body",
+      "value": "White Shirt"
+    },
+    {
+      "trait_type": "Eyes",
+      "value": "Red Round Eye"
+    },
+    {
+      "trait_type": "Head",
+      "value": "Diamond"
+    },
+    {
+      "trait_type": "Form",
+      "value": "Chog"
+    },
+    {
+      "trait_type": "Tier",
+      "value": "Epic"
+    },
+    {
+      "trait_type": "Naked",
+      "value": "No"
+    }
+  ]
+}

@@ -1,0 +1,55 @@
+{
+  "name": "CHOG #45",
+  "description": "CHOG — a 1969-piece collection on Monad.",
+  "image": "ipfs://bafybeihau2egcccbdxymeckmmbrqytbfor5gkt3en6d5fsbueymdbq7g6e/45.webp",
+  "attributes": [
+    {
+      "trait_type": "Background",
+      "value": "Lemon"
+    },
+    {
+      "trait_type": "Base",
+      "value": "Origin"
+    },
+    {
+      "trait_type": "Skin",
+      "value": "Origin"
+    },
+    {
+      "trait_type": "Side",
+      "value": "Left"
+    },
+    {
+      "trait_type": "Body",
+      "value": "White Yukata"
+    },
+    {
+      "trait_type": "Mouth",
+      "value": "Flat"
+    },
+    {
+      "trait_type": "Eyes",
+      "value": "Vertical"
+    },
+    {
+      "trait_type": "Head",
+      "value": "MEGA Chog"
+    },
+    {
+      "trait_type": "Accessory",
+      "value": "SB"
+    },
+    {
+      "trait_type": "Form",
+      "value": "Chog"
+    },
+    {
+      "trait_type": "Tier",
+      "value": "Uncommon"
+    },
+    {
+      "trait_type": "Naked",
+      "value": "No"
+    }
+  ]
+}

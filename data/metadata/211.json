@@ -1,0 +1,51 @@
+{
+  "name": "CHOG #211",
+  "description": "CHOG — a 1969-piece collection on Monad.",
+  "image": "ipfs://bafybeihau2egcccbdxymeckmmbrqytbfor5gkt3en6d5fsbueymdbq7g6e/211.webp",
+  "attributes": [
+    {
+      "trait_type": "Background",
+      "value": "Aqua Mint"
+    },
+    {
+      "trait_type": "Base",
+      "value": "Origin"
+    },
+    {
+      "trait_type": "Skin",
+      "value": "Pink"
+    },
+    {
+      "trait_type": "Side",
+      "value": "Right"
+    },
+    {
+      "trait_type": "Body",
+      "value": "Blue Chinese"
+    },
+    {
+      "trait_type": "Mouth",
+      "value": "Sad"
+    },
+    {
+      "trait_type": "Eyes",
+      "value": "Round Eye"
+    },
+    {
+      "trait_type": "Head",
+      "value": "MMGA Cap"
+    },
+    {
+      "trait_type": "Form",
+      "value": "Chog"
+    },
+    {
+      "trait_type": "Tier",
+      "value": "Common"
+    },
+    {
+      "trait_type": "Naked",
+      "value": "No"
+    }
+  ]
+}

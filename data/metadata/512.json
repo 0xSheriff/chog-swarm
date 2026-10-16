@@ -1,0 +1,47 @@
+{
+  "name": "CHOG #512",
+  "description": "CHOG — a 1969-piece collection on Monad.",
+  "image": "ipfs://bafybeihau2egcccbdxymeckmmbrqytbfor5gkt3en6d5fsbueymdbq7g6e/512.webp",
+  "attributes": [
+    {
+      "trait_type": "Background",
+      "value": "Sunlight"
+    },
+    {
+      "trait_type": "Base",
+      "value": "Origin"
+    },
+    {
+      "trait_type": "Skin",
+      "value": "Yellow"
+    },
+    {
+      "trait_type": "Side",
+      "value": "Right"
+    },
+    {
+      "trait_type": "Body",
+      "value": "Dragon suit"
+    },
+    {
+      "trait_type": "Mouth",
+      "value": "Rainbow Puke"
+    },
+    {
+      "trait_type": "Eyes",
+      "value": "Round"
+    },
+    {
+      "trait_type": "Form",
+      "value": "Chog"
+    },
+    {
+      "trait_type": "Tier",
+      "value": "Common"
+    },
+    {
+      "trait_type": "Naked",
+      "value": "No"
+    }
+  ]
+}

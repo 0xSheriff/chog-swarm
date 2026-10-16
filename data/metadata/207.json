@@ -1,0 +1,51 @@
+{
+  "name": "CHOG #207",
+  "description": "CHOG — a 1969-piece collection on Monad.",
+  "image": "ipfs://bafybeihau2egcccbdxymeckmmbrqytbfor5gkt3en6d5fsbueymdbq7g6e/207.webp",
+  "attributes": [
+    {
+      "trait_type": "Background",
+      "value": "Gold"
+    },
+    {
+      "trait_type": "Aura",
+      "value": "Aqua Aura"
+    },
+    {
+      "trait_type": "Base",
+      "value": "Skull"
+    },
+    {
+      "trait_type": "Skin",
+      "value": "Jade"
+    },
+    {
+      "trait_type": "Side",
+      "value": "Left"
+    },
+    {
+      "trait_type": "Body",
+      "value": "purple vest"
+    },
+    {
+      "trait_type": "Eyes",
+      "value": "Worried"
+    },
+    {
+      "trait_type": "Head",
+      "value": "Silver wreath"
+    },
+    {
+      "trait_type": "Form",
+      "value": "Skull"
+    },
+    {
+      "trait_type": "Tier",
+      "value": "Rare"
+    },
+    {
+      "trait_type": "Naked",
+      "value": "No"
+    }
+  ]
+}

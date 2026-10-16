@@ -1,0 +1,15 @@
+{
+  "name": "CHOG #1290 — Krown",
+  "description": "CHOG — a 1969-piece collection on Monad.",
+  "image": "ipfs://bafybeihau2egcccbdxymeckmmbrqytbfor5gkt3en6d5fsbueymdbq7g6e/1290.webp",
+  "attributes": [
+    {
+      "trait_type": "Base",
+      "value": "1:1"
+    },
+    {
+      "trait_type": "Tier",
+      "value": "Legendary"
+    }
+  ]
+}

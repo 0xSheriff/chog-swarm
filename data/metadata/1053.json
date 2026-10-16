@@ -1,0 +1,55 @@
+{
+  "name": "CHOG #1053",
+  "description": "CHOG — a 1969-piece collection on Monad.",
+  "image": "ipfs://bafybeihau2egcccbdxymeckmmbrqytbfor5gkt3en6d5fsbueymdbq7g6e/1053.webp",
+  "attributes": [
+    {
+      "trait_type": "Background",
+      "value": "Lemon"
+    },
+    {
+      "trait_type": "Aura",
+      "value": "Aqua Aura"
+    },
+    {
+      "trait_type": "Base",
+      "value": "Origin"
+    },
+    {
+      "trait_type": "Skin",
+      "value": "Origin"
+    },
+    {
+      "trait_type": "Side",
+      "value": "Left"
+    },
+    {
+      "trait_type": "Body",
+      "value": "white tee"
+    },
+    {
+      "trait_type": "Mouth",
+      "value": "Bubblegum"
+    },
+    {
+      "trait_type": "Eyes",
+      "value": "Modern VR"
+    },
+    {
+      "trait_type": "Head",
+      "value": "Buttcoin Cap"
+    },
+    {
+      "trait_type": "Form",
+      "value": "Chog"
+    },
+    {
+      "trait_type": "Tier",
+      "value": "Uncommon"
+    },
+    {
+      "trait_type": "Naked",
+      "value": "No"
+    }
+  ]
+}

@@ -1,0 +1,55 @@
+{
+  "name": "CHOG #380",
+  "description": "CHOG — a 1969-piece collection on Monad.",
+  "image": "ipfs://bafybeihau2egcccbdxymeckmmbrqytbfor5gkt3en6d5fsbueymdbq7g6e/380.webp",
+  "attributes": [
+    {
+      "trait_type": "Background",
+      "value": "Rosie"
+    },
+    {
+      "trait_type": "Aura",
+      "value": "Burning Aura"
+    },
+    {
+      "trait_type": "Base",
+      "value": "Origin"
+    },
+    {
+      "trait_type": "Skin",
+      "value": "Pink"
+    },
+    {
+      "trait_type": "Side",
+      "value": "Left"
+    },
+    {
+      "trait_type": "Body",
+      "value": "Red jacket"
+    },
+    {
+      "trait_type": "Mouth",
+      "value": "Mon coin"
+    },
+    {
+      "trait_type": "Eyes",
+      "value": "MOG"
+    },
+    {
+      "trait_type": "Head",
+      "value": "Plumber"
+    },
+    {
+      "trait_type": "Form",
+      "value": "Chog"
+    },
+    {
+      "trait_type": "Tier",
+      "value": "Uncommon"
+    },
+    {
+      "trait_type": "Naked",
+      "value": "No"
+    }
+  ]
+}

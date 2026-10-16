@@ -1,0 +1,538 @@
+[
+  {
+    "tokenId": 1,
+    "name": "CHOG #1",
+    "json": "fixtures/chog-1.json",
+    "image": "fixtures/chog-1.webp",
+    "traits": [
+      {
+        "trait_type": "Background",
+        "value": "Light Magenta"
+      },
+      {
+        "trait_type": "Aura",
+        "value": "Fiery Aura"
+      },
+      {
+        "trait_type": "Base",
+        "value": "Origin"
+      },
+      {
+        "trait_type": "Skin",
+        "value": "Black"
+      },
+      {
+        "trait_type": "Side",
+        "value": "Right"
+      },
+      {
+        "trait_type": "Body",
+        "value": "White Pure Shirt"
+      },
+      {
+        "trait_type": "Mouth",
+        "value": "Bubblegum"
+      },
+      {
+        "trait_type": "Eyes",
+        "value": "Gradient visor"
+      },
+      {
+        "trait_type": "Head",
+        "value": "Peace hat"
+      },
+      {
+        "trait_type": "Form",
+        "value": "Chog"
+      },
+      {
+        "trait_type": "Tier",
+        "value": "Common"
+      },
+      {
+        "trait_type": "Naked",
+        "value": "No"
+      }
+    ]
+  },
+  {
+    "tokenId": 24,
+    "name": "CHOG #24",
+    "json": "fixtures/chog-24.json",
+    "image": "fixtures/chog-24.webp",
+    "traits": [
+      {
+        "trait_type": "Background",
+        "value": "Mon"
+      },
+      {
+        "trait_type": "Aura",
+        "value": "Light Purple"
+      },
+      {
+        "trait_type": "Base",
+        "value": "Origin"
+      },
+      {
+        "trait_type": "Skin",
+        "value": "Black"
+      },
+      {
+        "trait_type": "Side",
+        "value": "Right"
+      },
+      {
+        "trait_type": "Body",
+        "value": "Kings Robe"
+      },
+      {
+        "trait_type": "Mouth",
+        "value": "normal smile"
+      },
+      {
+        "trait_type": "Eyes",
+        "value": "Closed Eye Crying"
+      },
+      {
+        "trait_type": "Head",
+        "value": "Star Cap"
+      },
+      {
+        "trait_type": "Form",
+        "value": "Chog"
+      },
+      {
+        "trait_type": "Tier",
+        "value": "Common"
+      },
+      {
+        "trait_type": "Naked",
+        "value": "No"
+      }
+    ]
+  },
+  {
+    "tokenId": 77,
+    "name": "CHOG #77",
+    "json": "fixtures/chog-77.json",
+    "image": "fixtures/chog-77.webp",
+    "traits": [
+      {
+        "trait_type": "Background",
+        "value": "Light Purple"
+      },
+      {
+        "trait_type": "Base",
+        "value": "Origin"
+      },
+      {
+        "trait_type": "Skin",
+        "value": "Black"
+      },
+      {
+        "trait_type": "Side",
+        "value": "Right"
+      },
+      {
+        "trait_type": "Body",
+        "value": "Blue Chinese"
+      },
+      {
+        "trait_type": "Mouth",
+        "value": "Sad"
+      },
+      {
+        "trait_type": "Eyes",
+        "value": "Green laser"
+      },
+      {
+        "trait_type": "Head",
+        "value": "Wizard Hat"
+      },
+      {
+        "trait_type": "Form",
+        "value": "Chog"
+      },
+      {
+        "trait_type": "Tier",
+        "value": "Common"
+      },
+      {
+        "trait_type": "Naked",
+        "value": "No"
+      }
+    ]
+  },
+  {
+    "tokenId": 143,
+    "name": "CHOG #143",
+    "json": "fixtures/chog-143.json",
+    "image": "fixtures/chog-143.webp",
+    "traits": [
+      {
+        "trait_type": "Background",
+        "value": "Mon"
+      },
+      {
+        "trait_type": "Aura",
+        "value": "Mint"
+      },
+      {
+        "trait_type": "Base",
+        "value": "Origin"
+      },
+      {
+        "trait_type": "Skin",
+        "value": "Red"
+      },
+      {
+        "trait_type": "Side",
+        "value": "Right"
+      },
+      {
+        "trait_type": "Body",
+        "value": "Dragon suit"
+      },
+      {
+        "trait_type": "Mouth",
+        "value": "Sad"
+      },
+      {
+        "trait_type": "Eyes",
+        "value": "Purple laser"
+      },
+      {
+        "trait_type": "Form",
+        "value": "Chog"
+      },
+      {
+        "trait_type": "Tier",
+        "value": "Common"
+      },
+      {
+        "trait_type": "Naked",
+        "value": "No"
+      }
+    ]
+  },
+  {
+    "tokenId": 314,
+    "name": "CHOG #314",
+    "json": "fixtures/chog-314.json",
+    "image": "fixtures/chog-314.webp",
+    "traits": [
+      {
+        "trait_type": "Background",
+        "value": "Fresh Green"
+      },
+      {
+        "trait_type": "Base",
+        "value": "Origin"
+      },
+      {
+        "trait_type": "Skin",
+        "value": "Black"
+      },
+      {
+        "trait_type": "Side",
+        "value": "Right"
+      },
+      {
+        "trait_type": "Body",
+        "value": "Shark Suit"
+      },
+      {
+        "trait_type": "Mouth",
+        "value": "Drooling"
+      },
+      {
+        "trait_type": "Eyes",
+        "value": "Round"
+      },
+      {
+        "trait_type": "Form",
+        "value": "Chog"
+      },
+      {
+        "trait_type": "Tier",
+        "value": "Common"
+      },
+      {
+        "trait_type": "Naked",
+        "value": "No"
+      }
+    ]
+  },
+  {
+    "tokenId": 500,
+    "name": "CHOG #500",
+    "json": "fixtures/chog-500.json",
+    "image": "fixtures/chog-500.webp",
+    "traits": [
+      {
+        "trait_type": "Background",
+        "value": "Lemon Yellow"
+      },
+      {
+        "trait_type": "Aura",
+        "value": "Yellow Aura"
+      },
+      {
+        "trait_type": "Base",
+        "value": "Origin"
+      },
+      {
+        "trait_type": "Skin",
+        "value": "Red"
+      },
+      {
+        "trait_type": "Side",
+        "value": "Right"
+      },
+      {
+        "trait_type": "Body",
+        "value": "Prisoner"
+      },
+      {
+        "trait_type": "Mouth",
+        "value": "Bubblegum"
+      },
+      {
+        "trait_type": "Eyes",
+        "value": "Dead"
+      },
+      {
+        "trait_type": "Head",
+        "value": "Clown Nose"
+      },
+      {
+        "trait_type": "Form",
+        "value": "Chog"
+      },
+      {
+        "trait_type": "Tier",
+        "value": "Common"
+      },
+      {
+        "trait_type": "Naked",
+        "value": "No"
+      }
+    ]
+  },
+  {
+    "tokenId": 777,
+    "name": "CHOG #777",
+    "json": "fixtures/chog-777.json",
+    "image": "fixtures/chog-777.webp",
+    "traits": [
+      {
+        "trait_type": "Background",
+        "value": "Rosy Pink"
+      },
+      {
+        "trait_type": "Aura",
+        "value": "Wind"
+      },
+      {
+        "trait_type": "Base",
+        "value": "Origin"
+      },
+      {
+        "trait_type": "Skin",
+        "value": "Pink"
+      },
+      {
+        "trait_type": "Side",
+        "value": "Left"
+      },
+      {
+        "trait_type": "Body",
+        "value": "Red Sleeveless"
+      },
+      {
+        "trait_type": "Mouth",
+        "value": "normal smile"
+      },
+      {
+        "trait_type": "Eyes",
+        "value": "MOG"
+      },
+      {
+        "trait_type": "Head",
+        "value": "MCGA Cap"
+      },
+      {
+        "trait_type": "Accessory",
+        "value": "Heart"
+      },
+      {
+        "trait_type": "Form",
+        "value": "Chog"
+      },
+      {
+        "trait_type": "Tier",
+        "value": "Uncommon"
+      },
+      {
+        "trait_type": "Naked",
+        "value": "No"
+      }
+    ]
+  },
+  {
+    "tokenId": 1024,
+    "name": "CHOG #1024",
+    "json": "fixtures/chog-1024.json",
+    "image": "fixtures/chog-1024.webp",
+    "traits": [
+      {
+        "trait_type": "Background",
+        "value": "Light Purple"
+      },
+      {
+        "trait_type": "Base",
+        "value": "Origin"
+      },
+      {
+        "trait_type": "Skin",
+        "value": "Origin"
+      },
+      {
+        "trait_type": "Side",
+        "value": "Right"
+      },
+      {
+        "trait_type": "Body",
+        "value": "White tuxedo"
+      },
+      {
+        "trait_type": "Mouth",
+        "value": "Rainbow Puke"
+      },
+      {
+        "trait_type": "Eyes",
+        "value": "Round"
+      },
+      {
+        "trait_type": "Head",
+        "value": "Star Cap"
+      },
+      {
+        "trait_type": "Form",
+        "value": "Chog"
+      },
+      {
+        "trait_type": "Tier",
+        "value": "Common"
+      },
+      {
+        "trait_type": "Naked",
+        "value": "No"
+      }
+    ]
+  },
+  {
+    "tokenId": 1462,
+    "name": "CHOG #1462",
+    "json": "fixtures/chog-1462.json",
+    "image": "fixtures/chog-1462.webp",
+    "traits": [
+      {
+        "trait_type": "Background",
+        "value": "Deep Aqua"
+      },
+      {
+        "trait_type": "Base",
+        "value": "Origin"
+      },
+      {
+        "trait_type": "Skin",
+        "value": "Pink"
+      },
+      {
+        "trait_type": "Side",
+        "value": "Left"
+      },
+      {
+        "trait_type": "Body",
+        "value": "Yellow 143 Jersey"
+      },
+      {
+        "trait_type": "Mouth",
+        "value": "Flat"
+      },
+      {
+        "trait_type": "Eyes",
+        "value": "BTC Glass"
+      },
+      {
+        "trait_type": "Head",
+        "value": "MCGA"
+      },
+      {
+        "trait_type": "Accessory",
+        "value": "Fwog"
+      },
+      {
+        "trait_type": "Form",
+        "value": "Chog"
+      },
+      {
+        "trait_type": "Tier",
+        "value": "Uncommon"
+      },
+      {
+        "trait_type": "Naked",
+        "value": "No"
+      }
+    ]
+  },
+  {
+    "tokenId": 1969,
+    "name": "CHOG #1969",
+    "json": "fixtures/chog-1969.json",
+    "image": "fixtures/chog-1969.webp",
+    "traits": [
+      {
+        "trait_type": "Background",
+        "value": "Light Purple"
+      },
+      {
+        "trait_type": "Base",
+        "value": "Origin"
+      },
+      {
+        "trait_type": "Skin",
+        "value": "Yellow"
+      },
+      {
+        "trait_type": "Side",
+        "value": "Right"
+      },
+      {
+        "trait_type": "Body",
+        "value": "Banana suit"
+      },
+      {
+        "trait_type": "Mouth",
+        "value": "normal smile"
+      },
+      {
+        "trait_type": "Eyes",
+        "value": "Side Eye"
+      },
+      {
+        "trait_type": "Form",
+        "value": "Chog"
+      },
+      {
+        "trait_type": "Tier",
+        "value": "Common"
+      },
+      {
+        "trait_type": "Naked",
+        "value": "No"
+      }
+    ]
+  }
+]

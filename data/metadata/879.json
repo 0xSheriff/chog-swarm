@@ -1,0 +1,51 @@
+{
+  "name": "CHOG #879",
+  "description": "CHOG — a 1969-piece collection on Monad.",
+  "image": "ipfs://bafybeihau2egcccbdxymeckmmbrqytbfor5gkt3en6d5fsbueymdbq7g6e/879.webp",
+  "attributes": [
+    {
+      "trait_type": "Background",
+      "value": "Mint"
+    },
+    {
+      "trait_type": "Base",
+      "value": "Origin"
+    },
+    {
+      "trait_type": "Skin",
+      "value": "Origin"
+    },
+    {
+      "trait_type": "Side",
+      "value": "Left"
+    },
+    {
+      "trait_type": "Body",
+      "value": "Red 143 Jersey"
+    },
+    {
+      "trait_type": "Mouth",
+      "value": "BTC Coin"
+    },
+    {
+      "trait_type": "Eyes",
+      "value": "Frog"
+    },
+    {
+      "trait_type": "Head",
+      "value": "10k TPS Cap"
+    },
+    {
+      "trait_type": "Form",
+      "value": "Chog"
+    },
+    {
+      "trait_type": "Tier",
+      "value": "Uncommon"
+    },
+    {
+      "trait_type": "Naked",
+      "value": "No"
+    }
+  ]
+}

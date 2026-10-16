@@ -1,0 +1,59 @@
+{
+  "name": "CHOG #1374",
+  "description": "CHOG — a 1969-piece collection on Monad.",
+  "image": "ipfs://bafybeihau2egcccbdxymeckmmbrqytbfor5gkt3en6d5fsbueymdbq7g6e/1374.webp",
+  "attributes": [
+    {
+      "trait_type": "Background",
+      "value": "Deep Aqua"
+    },
+    {
+      "trait_type": "Aura",
+      "value": "Aqua Aura"
+    },
+    {
+      "trait_type": "Base",
+      "value": "Origin"
+    },
+    {
+      "trait_type": "Skin",
+      "value": "Origin"
+    },
+    {
+      "trait_type": "Side",
+      "value": "Left"
+    },
+    {
+      "trait_type": "Body",
+      "value": "Pink Shirt"
+    },
+    {
+      "trait_type": "Mouth",
+      "value": "Clown Mouth"
+    },
+    {
+      "trait_type": "Eyes",
+      "value": "Angry"
+    },
+    {
+      "trait_type": "Head",
+      "value": "10k TPS Cap"
+    },
+    {
+      "trait_type": "Accessory",
+      "value": "Fwog"
+    },
+    {
+      "trait_type": "Form",
+      "value": "Chog"
+    },
+    {
+      "trait_type": "Tier",
+      "value": "Uncommon"
+    },
+    {
+      "trait_type": "Naked",
+      "value": "No"
+    }
+  ]
+}
