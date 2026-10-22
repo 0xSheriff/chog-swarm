@@ -19,6 +19,28 @@ Chog Swarm is a premium-tier autonomous web game built for Chogathon 2026 (choga
 - **Styling**: Tailwind CSS / CSS Modules with custom Chog design tokens (dark graphite base, authentic Chog brand accents, warm neutrals, bespoke typography)
 
 ## 4. Current State
+- **STAGE 1 DEMO VIDEO DISCOVERY, REAL FOOTAGE CAPTURE & GATE 1 MOTION TEST COMPLETED**:
+  - **Capture Environment**: Next.js production build (`npm run build` -> `npm start` on `http://localhost:3000`) verified with 0 console errors, 0 warnings, and zero Next.js dev badges across all routes.
+  - **Asset Verification**: Real Chog logo (`assets/capture/chog-logo.jpg`) byte-exact to `public/frame1.jpg` (SHA-256: `916e2ee9c181a01db3f62e662bf3732d8acf94a8b69297192ead9714f47e35d1`). Rule A strictly preserved (no color tint, no blur, original aspect ratio).
+  - **Canonical Footage Captured (1080p 60fps CRF 15)** in `assets/capture/`:
+    1. `scene1-nft-essential-blocked.mp4` (20 MB): Non-holder wallet blocked screen, smooth cursor tracing shortened address `0x973a...82F4`, MonadScan explorer link, Judge Pass code input.
+    2. `scene2-creator-pass-arena.mp4` (13 MB): Creator Pass authentication, persistent banner, Chog select modal with authentic WebP avatars, cursor glide to START RACE with glowing amber click ripple.
+    3. `scene3-arena-race-finish.mp4` (5.1 MB): Autonomous circuit race action, real-time score counters, turn scrubber advancing to celebration banner.
+    4. `scene4-trait-lab-counterfactual.mp4` (9.5 MB): Counterfactual parameter mutation (`Eyes`, `Aura`), dynamic stat delta bars, proof that traits dictate physics.
+    5. `scene5-daily-gauntlet.mp4` (7.8 MB): Daily Gauntlet global seed `#133742` simulation, anti-cheat validation, exclusion of creator passes from public rankings.
+    6. `halloween-background-loop.mp4` (55 MB): High-framerate 20-second loop of living parallax background (independent quadrant drifts, glowing embers, breathing pulses).
+  - **Procedural Audio Stems Extracted** in `assets/audio-stems/`:
+    - `music-bed.wav` (18s loop @ 92 BPM D harmonic minor), `bumper.wav`, `rollover.wav`, `drain.wav`, `jackpot.wav`, `ui-tick.wav`, `flipper.wav` synthesized via Chromium OfflineAudioContext directly from `lib/halloween-audio.ts`.
+  - **Documentation Deliverables Authored**:
+    - `docs/demo/real-runs-manifest.json`: Real match runs across 5 varied Chogs with deterministic hashes.
+    - `docs/demo/how-to-play.md`: Verified factual gameplay guide, traits-to-policy mapping, game modes, Monad chain checks, notes on $CHOG, and pass behaviors with screenshot references.
+    - `docs/demo/testing-instructions.md`: Concise 4-path judge verification guide (< 3 minutes to test via Judge Pass `CHOGATHON_2026_JUDGE2002`, non-holder block, public replay, or Trait Lab).
+    - `docs/demo/storyboard.md`: Complete 2:50 runtime storyboard specifying visual treatments, glossy 3D browser perspectives, smooth cursor easing, and stem-mapped audio cues.
+  - **Gate 1 Motion Test Rendered**:
+    - Modular Hyperframes project in `motion-test/` (Cold Open -> 3D Tilted Browser -> Dynamic Push-In & Spotlight Ring).
+    - Passed `hyperframes check` with 0 errors, 0 warnings, 8/8 WCAG AA contrast checks.
+    - Rendered to `assets/capture/gate1-motion-test.mp4` (1920x1080 @ 60fps).
+
 - **CONSUMER-READY POLISH & VIBE-CODED ELEMENT REMOVAL VERIFIED**:
   - Eliminated all hackathon meta-rubric badges ("NOVELTY 30%", "RETENTION 20%") across the landing page, Trait Lab, and Daily Gauntlet, replacing with consumer badges ("SANDBOX", "COUNTERFACTUAL SANDBOX", "DAILY CHALLENGE", "GLOBAL CHALLENGE").
   - Removed developer test toggles ("Disconnect Test") and intrusive warning banners from header navigation and gameplay pages.

@@ -33,3 +33,10 @@ Thumbs.db
 
 # Test coverage
 coverage/
+
+# Video captures & temporary renders
+assets/capture/*.mp4
+motion-test/assets/media/*.mp4
+motion-test/.hyperframes/
+.tmp_video_rec/
+.ref_frames/

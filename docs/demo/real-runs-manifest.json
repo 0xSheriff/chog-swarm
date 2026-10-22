@@ -1,0 +1,77 @@
+[
+  {
+    "runNumber": 1,
+    "chogName": "Chog #143",
+    "tokenId": 143,
+    "seed": 2026100,
+    "winnerId": "CHOG #1",
+    "matchChecksum": "c4ec80c9",
+    "totalTurns": 19,
+    "finalScores": {
+      "Chog #143": 155,
+      "CHOG #1": 943,
+      "CHOG #24": 153,
+      "CHOG #77": 155
+    }
+  },
+  {
+    "runNumber": 2,
+    "chogName": "Chog #24",
+    "tokenId": 24,
+    "seed": 2026177,
+    "winnerId": "CHOG #1",
+    "matchChecksum": "259654a2",
+    "totalTurns": 19,
+    "finalScores": {
+      "Chog #24": 155,
+      "CHOG #1": 943,
+      "CHOG #24": 153,
+      "CHOG #77": 155
+    }
+  },
+  {
+    "runNumber": 3,
+    "chogName": "Chog #1",
+    "tokenId": 1,
+    "seed": 2026254,
+    "winnerId": "CHOG #1",
+    "matchChecksum": "8640a8d3",
+    "totalTurns": 19,
+    "finalScores": {
+      "Chog #1": 155,
+      "CHOG #1": 943,
+      "CHOG #24": 153,
+      "CHOG #77": 155
+    }
+  },
+  {
+    "runNumber": 4,
+    "chogName": "Chog #10",
+    "tokenId": 10,
+    "seed": 2026331,
+    "winnerId": "CHOG #1",
+    "matchChecksum": "e6eabcd8",
+    "totalTurns": 19,
+    "finalScores": {
+      "Chog #10": 155,
+      "CHOG #1": 943,
+      "CHOG #24": 153,
+      "CHOG #77": 155
+    }
+  },
+  {
+    "runNumber": 5,
+    "chogName": "Chog #50",
+    "tokenId": 50,
+    "seed": 2026408,
+    "winnerId": "CHOG #1",
+    "matchChecksum": "4794b0c7",
+    "totalTurns": 19,
+    "finalScores": {
+      "Chog #50": 155,
+      "CHOG #1": 943,
+      "CHOG #24": 153,
+      "CHOG #77": 155
+    }
+  }
+]
