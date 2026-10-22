@@ -2,9 +2,23 @@ import { NextRequest, NextResponse } from 'next/server';
 import { compilePolicy, runFullMatch, ArenaConfig, getStandardRaceOpponents } from '@/packages/engine/src';
 import { getDailySeed, getTodayUtcKey, recordVerifiedScore, isForbiddenPlayer } from '@/lib/leaderboard-store';
 import { verifyChogOwnershipOnChain } from '@/lib/monad-chain';
+import { SESSION_COOKIE_NAME, validateAndRefreshSession } from '@/lib/auth-session';
 
 export async function POST(request: NextRequest) {
   try {
+    const cookie = request.cookies.get(SESSION_COOKIE_NAME)?.value;
+    const { session, error: sessionError } = await validateAndRefreshSession(cookie);
+
+    if (!session) {
+      return NextResponse.json(
+        {
+          error: sessionError || 'Unauthorized: Active Chog holder session required to submit Gauntlet runs.',
+          blocked: true,
+        },
+        { status: 401 }
+      );
+    }
+
     const body = await request.json();
     const { playerAddress, chog, claimedScore, seed, rulesVersion = 'race-v1' } = body;
 
@@ -19,13 +33,17 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
-    // Hard check: verify live on-chain ownership against Monad Mainnet
-    const ownership = await verifyChogOwnershipOnChain(playerAddress, chog.tokenId);
-    if (!ownership.verified) {
-      return NextResponse.json({
-        verified: false,
-        error: `NFT Essentiality Verification Failed: ${ownership.error || 'Address is not the verified owner of this Chog NFT on-chain.'}`
-      }, { status: 403 });
+    const isCreatorOrJudge = session.creatorPass || session.judgePass;
+
+    // Hard check: verify live on-chain ownership against Monad Mainnet for regular players
+    if (!isCreatorOrJudge) {
+      const ownership = await verifyChogOwnershipOnChain(playerAddress, chog.tokenId);
+      if (!ownership.verified) {
+        return NextResponse.json({
+          verified: false,
+          error: `NFT Essentiality Verification Failed: ${ownership.error || 'Address is not the verified owner of this Chog NFT on-chain.'}`
+        }, { status: 403 });
+      }
     }
 
     const todayDateKey = getTodayUtcKey();
@@ -73,7 +91,22 @@ export async function POST(request: NextRequest) {
       }, { status: 403 });
     }
 
-    // 4. Verify Cryptographic Signature (seed + score hash + address)
+    // 4. If Creator or Judge Pass, runs are strictly excluded from public leaderboard
+    if (isCreatorOrJudge) {
+      return NextResponse.json({
+        verified: true,
+        creatorPass: session.creatorPass,
+        judgePass: session.judgePass,
+        recordedToLeaderboard: false,
+        actualScore,
+        matchChecksum: simResult.matchChecksum,
+        message: session.creatorPass
+          ? 'Creator Pass: Run verified! Excluded from public leaderboard.'
+          : 'Judge Pass: Run verified! Excluded from public leaderboard.',
+      });
+    }
+
+    // 5. Verify Cryptographic Signature (seed + score hash + address) for competitive entries
     const { signature, message } = body;
     if (!signature || !message) {
       return NextResponse.json({
@@ -105,7 +138,7 @@ export async function POST(request: NextRequest) {
       }, { status: 401 });
     }
 
-    // 5. Save to verified leaderboard
+    // 6. Save to verified leaderboard
     const entry = await recordVerifiedScore({
       playerAddress,
       tokenId: chog.tokenId,
@@ -123,6 +156,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       verified: true,
       entry,
+      recordedToLeaderboard: true,
       matchChecksum: simResult.matchChecksum,
       message: 'Score successfully re-simulated and verified on server.'
     });

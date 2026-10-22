@@ -14,10 +14,13 @@ import fixturesManifest from '@/fixtures/manifest.json';
 import { Award, Zap, Shield, CheckCircle2, Trophy, Clock, AlertTriangle, Users, Target, Flag } from 'lucide-react';
 import { LeaderboardEmptyState } from '@/components/leaderboard-empty-state';
 import { ArenaLegend } from '@/components/arena-legend';
+import { GateGuard } from '@/components/gate-guard';
+import { useAccessSession } from '@/components/access-context';
 
 export default function DailyGauntletPage() {
   const { address, isConnected } = useAccount();
   const { signMessageAsync } = useSignMessage();
+  const { session } = useAccessSession();
 
   const [dateKey, setDateKey] = useState<string>('');
   const [dailySeed, setDailySeed] = useState<number>(20261015);
@@ -76,6 +79,11 @@ export default function DailyGauntletPage() {
       return;
     }
 
+    if (session?.creatorPass || session?.judgePass) {
+      setIsOwnerVerified(true);
+      return;
+    }
+
     if (selectedChog) {
       verifyChogOwnershipOnChain(address, selectedChog.tokenId).then(res => {
         setIsOwnerVerified(res.verified);
@@ -124,22 +132,26 @@ export default function DailyGauntletPage() {
     const playerAgent = finalState.agents.find(a => a.id === (address || selectedChog.name) || a.tokenId === selectedChog.tokenId);
     const finalScore = playerAgent?.score || 0;
     const finishTurn = playerAgent?.finishTurn;
+    const isCreatorOrJudge = Boolean(session?.creatorPass || session?.judgePass);
     const expectedChecksum = replay.matchChecksum;
-    const messageToSign = `Chog Swarm Gauntlet Score Verification\nAddress: ${address.toLowerCase()}\nSeed: ${dailySeed}\nScore: ${finalScore}\nChecksum: ${expectedChecksum}`;
+    const messageToSign = `Chog Swarm Gauntlet Score Verification\nAddress: ${(address || session?.address || '0x0').toLowerCase()}\nSeed: ${dailySeed}\nScore: ${finalScore}\nChecksum: ${expectedChecksum}`;
 
     setIsSubmitting(true);
     setSubmissionStatus(null);
 
     try {
-      // 1. Request wallet signature
-      const signature = await signMessageAsync({ message: messageToSign });
+      // 1. Request wallet signature if competitive player, otherwise pass bypass
+      let signature = 'creator_judge_pass_bypass';
+      if (!isCreatorOrJudge) {
+        signature = await signMessageAsync({ message: messageToSign });
+      }
 
       // 2. Submit signed proof to server for re-simulation and verification
       const res = await fetch('/api/gauntlet/submit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          playerAddress: address,
+          playerAddress: address || session?.address,
           chog: selectedChog,
           claimedScore: finalScore,
           finishTurn,
@@ -155,12 +167,20 @@ export default function DailyGauntletPage() {
       if (!res.ok) {
         setSubmissionStatus({ success: false, message: data.error || 'Server validation failed' });
       } else {
-        setSubmissionStatus({
-          success: true,
-          message: 'Score verified by server re-simulation and cryptographic signature! Added to Daily Gauntlet leaderboard.',
-          checksum: data.matchChecksum
-        });
-        await fetchLeaderboard();
+        if (data.creatorPass || data.judgePass) {
+          setSubmissionStatus({
+            success: true,
+            message: data.message || 'Run verified! Creator/Judge passes are excluded from public leaderboard.',
+            checksum: data.matchChecksum
+          });
+        } else {
+          setSubmissionStatus({
+            success: true,
+            message: 'Score verified by server re-simulation and cryptographic signature! Added to Daily Gauntlet leaderboard.',
+            checksum: data.matchChecksum
+          });
+          await fetchLeaderboard();
+        }
       }
     } catch (e: any) {
       setSubmissionStatus({ success: false, message: e.message || 'Signature or submission failed.' });
@@ -189,7 +209,8 @@ export default function DailyGauntletPage() {
       });
 
   return (
-    <div className="flex flex-col gap-6 py-2">
+    <GateGuard currentChogId={selectedChog?.tokenId} onChangeChogClick={() => setIsSelectModalOpen(true)}>
+      <div className="flex flex-col gap-6 py-2">
       {/* 1-Sentence Goal Banner */}
       <div className="px-5 py-3.5 rounded-2xl bg-gradient-to-r from-chog-gold/20 via-chog-card to-amber-500/10 border border-chog-gold/30 flex items-center justify-between gap-4 shadow-lg">
         <div className="flex items-center gap-3">
@@ -423,5 +444,6 @@ export default function DailyGauntletPage() {
         userAddress={address}
       />
     </div>
+    </GateGuard>
   );
 }

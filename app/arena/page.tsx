@@ -18,6 +18,8 @@ import confetti from 'canvas-confetti';
 import { ChogImage } from '@/components/chog-image';
 import { ArenaLegend } from '@/components/arena-legend';
 import { ArenaIntroModal } from '@/components/arena-intro-modal';
+import { GateGuard } from '@/components/gate-guard';
+import { useAccessSession } from '@/components/access-context';
 
 const RACER_THEMES = [
   { border: 'border-chog-purple', bg: 'bg-chog-purple/20', text: 'text-chog-purpleSoft', dot: '#836EF9' },
@@ -37,6 +39,7 @@ export default function ArenaPage() {
 function ArenaContent() {
   const searchParams = useSearchParams();
   const { address, isConnected } = useAccount();
+  const { session, selectChog } = useAccessSession();
 
   const rulesVersion = searchParams.get('rules') || 'race-v1';
   const isRaceV1 = rulesVersion === 'race-v1';
@@ -114,6 +117,12 @@ function ArenaContent() {
         return;
       }
 
+      if (session?.creatorPass || session?.judgePass) {
+        setIsOwnerVerified(true);
+        setVerificationError(null);
+        return;
+      }
+
       if (selectedChog) {
         const res = await verifyChogOwnershipOnChain(address, selectedChog.tokenId);
         setIsOwnerVerified(res.verified);
@@ -158,7 +167,7 @@ function ArenaContent() {
     }
   }, [hasAutoRun, selectedChog, compiledPolicy, rivals, isDisconnectedTest, isRaceV1]);
 
-  const handleSpawnAndRunMatch = () => {
+  const handleSpawnAndRunMatch = async () => {
     if (isDisconnectedTest) {
       alert('Spawn Rejected: Disconnect test is active. The Chog NFT is strictly essential to spawn.');
       return;
@@ -168,6 +177,35 @@ function ArenaContent() {
 
     const seed = Math.floor(Math.random() * 900000) + 100000;
     setMatchSeed(seed);
+
+    // Call server-side gated resolution endpoint
+    try {
+      const response = await fetch('/api/arena/run', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          seed,
+          rulesVersion: isRaceV1 ? 'race-v1' : 'v1.0',
+          chog: selectedChog,
+          rivals,
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setReplay(data.replay);
+        setCurrentTurnIndex(0);
+
+        if (data.replay.winnerId === selectedChog.name) {
+          setTimeout(() => {
+            confetti({ particleCount: 60, spread: 70, origin: { y: 0.7 } });
+          }, 500);
+        }
+        return;
+      }
+    } catch (err) {
+      console.warn('Gated server run failed, falling back to local simulation:', err);
+    }
 
     const agentList = isRaceV1
       ? [
@@ -328,7 +366,8 @@ function ArenaContent() {
   }, [replay, currentTurnIndex, isRaceV1, matchSeed, selectedChog, compiledPolicy, rivals]);
 
   return (
-    <div className="flex flex-col gap-6 py-2">
+    <GateGuard currentChogId={selectedChog?.tokenId} onChangeChogClick={() => setIsSelectModalOpen(true)}>
+      <div className="flex flex-col gap-6 py-2">
       {/* 1-Sentence Goal Banner */}
       <div className="px-5 py-3.5 rounded-2xl bg-gradient-to-r from-chog-purple/20 via-chog-card to-chog-purple/10 border border-chog-purple/30 flex items-center justify-between gap-4 shadow-lg">
         <div className="flex items-center gap-3">
@@ -635,5 +674,6 @@ function ArenaContent() {
         userAddress={address}
       />
     </div>
+    </GateGuard>
   );
 }

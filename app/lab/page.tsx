@@ -9,6 +9,7 @@ import { runFullMatch } from '@engine/engine';
 import fixturesManifest from '@/fixtures/manifest.json';
 import { Cpu, Split, ArrowRight, Sparkles, AlertCircle, Compass, Zap, Flame, Eye, Target } from 'lucide-react';
 import { ArenaLegend } from '@/components/arena-legend';
+import { GateGuard } from '@/components/gate-guard';
 
 export default function TraitLabPage() {
   const [fixedSeed] = useState<number>(555777);
@@ -130,7 +131,8 @@ export default function TraitLabPage() {
   const stateMutated = runMutated.stateHistory[currentTurnIndex] || runMutated.stateHistory[0];
 
   return (
-    <div className="flex flex-col gap-6 py-2">
+    <GateGuard>
+      <div className="flex flex-col gap-6 py-2">
       {/* 1-Sentence Goal Banner */}
       <div className="px-5 py-3.5 rounded-2xl bg-gradient-to-r from-chog-diverge/20 via-chog-card to-chog-purple/10 border border-chog-diverge/30 flex items-center justify-between gap-4 shadow-lg">
         <div className="flex items-center gap-3">
@@ -394,5 +396,6 @@ export default function TraitLabPage() {
       {/* Tile and Objective Legend */}
       <ArenaLegend />
     </div>
+    </GateGuard>
   );
 }
