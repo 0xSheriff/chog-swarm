@@ -6,6 +6,8 @@
 
 export interface ThemeFxConfig {
   parallax: boolean;
+  quadrantDrift: boolean;
+  breathingGlow: boolean;
   focusCrossFade: boolean;
   vignette: boolean;
   fog: boolean;
@@ -26,6 +28,8 @@ export interface ThemeFxConfig {
 
 export const themeFx: ThemeFxConfig = {
   parallax: true,
+  quadrantDrift: true,
+  breathingGlow: true,
   focusCrossFade: true,
   vignette: true,
   fog: true,

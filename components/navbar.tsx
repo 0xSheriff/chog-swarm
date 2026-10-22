@@ -7,6 +7,7 @@ import { useAccount, useChainId, useSwitchChain } from 'wagmi';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { getChogTokenBalance } from '@/lib/monad-chain';
 import { Shield, Sparkles, Wallet, Flame, AlertCircle, Zap } from 'lucide-react';
+import { AudioControls } from '@/components/audio-controls';
 
 export function Navbar() {
   const pathname = usePathname();
@@ -143,6 +144,9 @@ export function Navbar() {
               chainStatus={{ smallScreen: 'none', largeScreen: 'full' }}
               accountStatus={{ smallScreen: 'avatar', largeScreen: 'full' }}
             />
+
+            {/* Halloween Synthesized Web Audio Controls */}
+            <AudioControls />
           </div>
         </div>
       </header>

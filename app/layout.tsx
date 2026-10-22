@@ -5,6 +5,8 @@ import { Navbar } from '@/components/navbar';
 import { HalloweenBackground } from '@/components/halloween-bg';
 import { HalloweenEffects } from '@/components/halloween-effects';
 
+import { MotionToggle } from '@/components/motion-toggle';
+
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://chog-swarm.vercel.app'),
   title: 'Chog Swarm | Autonomous Agent Arena on Monad',
@@ -71,7 +73,10 @@ export default function RootLayout({
                   </div>
                   <span>Chog Swarm • Built for Chogathon 2026</span>
                 </div>
-                <span className="text-chog-muted">Monad Mainnet • Contract <code className="font-mono text-bone">0xc96d...3763</code></span>
+                <div className="flex items-center gap-4">
+                  <MotionToggle />
+                  <span className="text-chog-muted">Monad Mainnet • Contract <code className="font-mono text-bone">0xc96d...3763</code></span>
+                </div>
               </div>
             </footer>
           </div>

@@ -15,7 +15,7 @@ export function HalloweenEffects() {
     let activePanel: HTMLElement | null = null;
 
     const handlePointerMove = (e: MouseEvent) => {
-      const target = e.target as HTMLElement | null;
+      const target = e.target instanceof Element ? e.target : null;
       const panel = target?.closest('.glass-sheen, .glass-panel') as HTMLElement | null;
 
       if (panel) {

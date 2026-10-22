@@ -21,11 +21,11 @@ export function HalloweenBackground() {
   const pathname = usePathname();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
-  // Depth layer refs for parallax transforms
-  const layer1Ref = useRef<HTMLDivElement | null>(null); // Collage (deepest: 8px)
-  const layer2Ref = useRef<HTMLDivElement | null>(null); // Focus image (14px)
-  const layer3Ref = useRef<HTMLDivElement | null>(null); // Fog + Embers (20px)
-  const layer4Ref = useRef<HTMLDivElement | null>(null); // Vignette + Moon (nearest: 28px)
+  // Depth layer refs for parallax transforms (18px, 30px, 42px, 56px)
+  const layer1Ref = useRef<HTMLDivElement | null>(null); // Quadrant images (deepest: 18px)
+  const layer2Ref = useRef<HTMLDivElement | null>(null); // Focus image (30px)
+  const layer3Ref = useRef<HTMLDivElement | null>(null); // Fog + Embers (42px)
+  const layer4Ref = useRef<HTMLDivElement | null>(null); // Vignette + Moon (nearest: 56px)
 
   // Game-reactive state
   const [drainActive, setDrainActive] = useState(false);
@@ -33,10 +33,16 @@ export function HalloweenBackground() {
   const [shockwaveKey, setShockwaveKey] = useState<number | null>(null);
   const [jackpotActive, setJackpotActive] = useState(false);
 
-  // Adaptive quality tier: 0 = full, 1 = reduced bats/trail, 2 = half embers/no sheen, 3 = static
+  // Adaptive quality tier: 0 = full, 1 = reduced bats/trail, 2 = half embers, 3 = minimal particles
+  // (Quadrant drift NEVER stops)
   const qualityTierRef = useRef(0);
 
-  // Focus image determination
+  // Reset adaptive quality tier on route change
+  useEffect(() => {
+    qualityTierRef.current = 0;
+  }, [pathname]);
+
+  // Focus image determination per route
   const getFocusConfig = (path: string): { image: string | null; opacity: number } => {
     if (!themeFx.focusCrossFade) return { image: null, opacity: 0 };
     if (!path || path === '/') {
@@ -107,7 +113,6 @@ export function HalloweenBackground() {
     const handleOrientation = (e: DeviceOrientationEvent) => {
       if (e.gamma !== null && e.beta !== null) {
         gyroActive = true;
-        // Clamp gamma (-30 to 30) and beta (-30 to 30)
         targetX = Math.max(-1, Math.min(1, e.gamma / 25));
         targetY = Math.max(-1, Math.min(1, (e.beta - 45) / 25));
         lastActiveTime = performance.now();
@@ -115,9 +120,10 @@ export function HalloweenBackground() {
     };
 
     window.addEventListener('mousemove', handlePointerMove, { passive: true });
+    window.addEventListener('pointermove', handlePointerMove, { passive: true });
     window.addEventListener('scroll', handleScroll, { passive: true });
     document.addEventListener('visibilitychange', handleVisibility);
-    if (window.DeviceOrientationEvent) {
+    if (typeof window !== 'undefined' && 'DeviceOrientationEvent' in window) {
       window.addEventListener('deviceorientation', handleOrientation, { passive: true });
     }
 
@@ -127,56 +133,46 @@ export function HalloweenBackground() {
 
       if (isHidden) return;
 
+      const delta = Math.min(Math.max(now - lastFrameTime, 8), 1000);
+      lastFrameTime = now;
+
       // Adaptive quality FPS monitoring
       if (themeFx.adaptiveQuality) {
-        const delta = now - lastFrameTime;
-        lastFrameTime = now;
         frameTimes.push(1000 / Math.max(delta, 1));
         if (frameTimes.length > 120) {
           frameTimes.shift();
           const avgFps = frameTimes.reduce((a, b) => a + b, 0) / frameTimes.length;
-          if (avgFps < 52 && qualityTierRef.current < 3) {
+          // Step down only if severe sustained lag (< 50 FPS)
+          if (avgFps < 50 && qualityTierRef.current < 2) {
             qualityTierRef.current += 1;
-            frameTimes = []; // reset measurement window
+            frameTimes = [];
           }
         }
       }
 
-      // Check idle (3 seconds without pointer) -> run slow Lissajous auto-drift if no gyro
-      const idle = (now - lastActiveTime) > 3000;
-      if (idle && !gyroActive && qualityTierRef.current < 3) {
-        const t = now * 0.00015; // 40s loop
-        targetX = Math.sin(t * 2) * 0.35;
-        targetY = Math.cos(t * 3) * 0.35;
-      }
-
-      if (qualityTierRef.current >= 3) {
-        // Quality tier 3: freeze parallax
-        return;
-      }
-
-      // Smooth lerp (0.08)
-      currentX += (targetX - currentX) * 0.08;
-      currentY += (targetY - currentY) * 0.08;
+      // Delta-time compensated lerp (0.08 at 60 FPS)
+      const lerpFactor = 1 - Math.pow(1 - 0.08, delta / 16.667);
+      currentX += (targetX - currentX) * lerpFactor;
+      currentY += (targetY - currentY) * lerpFactor;
 
       const scrollOffset = scrollY * 0.15;
 
-      // Apply depth translations
+      // Apply visibly elevated depth translations:
+      // Layer 1 (deepest): 18px
+      // Layer 2 (focus): 30px
+      // Layer 3 (fog/embers): 42px
+      // Layer 4 (vignette/moon): 56px
       if (layer1Ref.current) {
-        // Deepest: 8px
-        layer1Ref.current.style.transform = `translate3d(${(currentX * 8).toFixed(2)}px, ${(currentY * 8 + scrollOffset * 0.3).toFixed(2)}px, 0)`;
+        layer1Ref.current.style.transform = `translate3d(${(currentX * 18).toFixed(2)}px, ${(currentY * 18 + scrollOffset * 0.25).toFixed(2)}px, 0)`;
       }
       if (layer2Ref.current) {
-        // Focus layer: 14px
-        layer2Ref.current.style.transform = `translate3d(${(currentX * 14).toFixed(2)}px, ${(currentY * 14 + scrollOffset * 0.5).toFixed(2)}px, 0)`;
+        layer2Ref.current.style.transform = `translate3d(${(currentX * 30).toFixed(2)}px, ${(currentY * 30 + scrollOffset * 0.5).toFixed(2)}px, 0)`;
       }
       if (layer3Ref.current) {
-        // Fog & embers: 20px
-        layer3Ref.current.style.transform = `translate3d(${(currentX * 20).toFixed(2)}px, ${(currentY * 20 + scrollOffset * 0.7).toFixed(2)}px, 0)`;
+        layer3Ref.current.style.transform = `translate3d(${(currentX * 42).toFixed(2)}px, ${(currentY * 42 + scrollOffset * 0.75).toFixed(2)}px, 0)`;
       }
       if (layer4Ref.current) {
-        // Vignette & moon: 28px
-        layer4Ref.current.style.transform = `translate3d(${(currentX * 28).toFixed(2)}px, ${(currentY * 28 + scrollOffset).toFixed(2)}px, 0)`;
+        layer4Ref.current.style.transform = `translate3d(${(currentX * 56).toFixed(2)}px, ${(currentY * 56 + scrollOffset).toFixed(2)}px, 0)`;
       }
     };
 
@@ -185,9 +181,12 @@ export function HalloweenBackground() {
     return () => {
       cancelAnimationFrame(rafId);
       window.removeEventListener('mousemove', handlePointerMove);
+      window.removeEventListener('pointermove', handlePointerMove);
       window.removeEventListener('scroll', handleScroll);
       document.removeEventListener('visibilitychange', handleVisibility);
-      window.removeEventListener('deviceorientation', handleOrientation);
+      if (typeof window !== 'undefined' && 'DeviceOrientationEvent' in window) {
+        window.removeEventListener('deviceorientation', handleOrientation);
+      }
     };
   }, []);
 
@@ -228,7 +227,7 @@ export function HalloweenBackground() {
             color: Math.random() > 0.4 ? '#ff7a1a' : '#ff3b1f',
             alpha: 0.9,
             maxAlpha: 0.9,
-            decay: 0.025, // Fades in ~600ms at 60fps
+            decay: 0.025,
             isTrail: true,
           });
         }
@@ -237,7 +236,7 @@ export function HalloweenBackground() {
     window.addEventListener('mousemove', handleMouseMove, { passive: true });
 
     // Spawn regular ambient particles (up to 40, or 20 in tier 2)
-    const maxParticles = () => (qualityTierRef.current >= 2 ? 20 : (multiballActive ? 80 : 40));
+    const maxParticles = () => (qualityTierRef.current >= 2 ? 15 : (multiballActive ? 80 : 40));
 
     const spawnParticle = (): Particle => ({
       x: Math.random() * width,
@@ -253,7 +252,7 @@ export function HalloweenBackground() {
 
     for (let i = 0; i < 25; i++) {
       const p = spawnParticle();
-      p.y = Math.random() * height; // initial spread
+      p.y = Math.random() * height;
       p.alpha = Math.random() * p.maxAlpha;
       particles.push(p);
     }
@@ -286,7 +285,6 @@ export function HalloweenBackground() {
         p.x += p.vx;
         p.y += p.vy;
 
-        // Fade in then out
         if (p.alpha < p.maxAlpha && p.vy < 0) {
           p.alpha += 0.015;
         } else {
@@ -353,10 +351,9 @@ export function HalloweenBackground() {
       switch (type) {
         case 'bumper':
         case 'slingshot': {
-          // 150ms border ember burst
           const burst = document.createElement('div');
           burst.className = 'fixed pointer-events-none inset-0 z-0 transition-opacity duration-150';
-          burst.style.boxShadow = 'inset 0 0 80px rgba(255, 122, 26, 0.4)';
+          burst.style.boxShadow = 'inset 0 0 80px rgba(255, 122, 26, 0.45)';
           burst.style.opacity = '1';
           document.body.appendChild(burst);
           setTimeout(() => {
@@ -402,22 +399,90 @@ export function HalloweenBackground() {
       }`}
       aria-hidden="true"
     >
-      {/* ── Layer 1: Base Collage (Deepest: 8px translation) ── */}
+      {/* ── Layer 1: Four Living Quadrants with Independent Drifts (18px Parallax) ── */}
       <div
         ref={layer1Ref}
-        className="absolute -inset-[30px] w-[calc(100%+60px)] h-[calc(100%+60px)] will-change-transform"
+        data-testid="parallax-layer-1"
+        className="absolute -inset-[60px] w-[calc(100%+120px)] h-[calc(100%+120px)] will-change-transform"
       >
-        <picture>
-          <source media="(max-width: 767px)" srcSet="/halloween/bg/mobile-bg.webp" />
-          <source media="(max-width: 1279px)" srcSet="/halloween/bg/tablet-bg.webp" />
+        {/* Breathing Warm/Cold Light Pools behind quadrants */}
+        {themeFx.breathingGlow && (
+          <div className="absolute inset-0 pointer-events-none overflow-hidden">
+            {/* Warm Pumpkin Glow behind Q1 (top-left) & Q4 (bottom-right) */}
+            <div className="glow-breathing-warm absolute top-[10%] left-[10%] w-[45vw] h-[45vh] rounded-full bg-pumpkin/20 blur-[130px]" />
+            <div className="glow-breathing-warm absolute bottom-[10%] right-[10%] w-[45vw] h-[45vh] rounded-full bg-ember/25 blur-[140px]" />
+
+            {/* Cold Blue/Purple Glow behind Q2 (top-right) & Q3 (bottom-left) */}
+            <div className="glow-breathing-cold absolute top-[10%] right-[10%] w-[45vw] h-[45vh] rounded-full bg-ghost-blue/20 blur-[130px]" />
+            <div className="glow-breathing-cold absolute bottom-[10%] left-[10%] w-[45vw] h-[45vh] rounded-full bg-purple-900/30 blur-[140px]" />
+          </div>
+        )}
+
+        {/* Quadrant 1: Frame 1 (Top-Left: Flame Chog) */}
+        <div
+          className="drift-quadrant-1 absolute top-0 left-0 w-[55%] h-[55%] overflow-hidden pointer-events-none"
+          style={{
+            maskImage: 'radial-gradient(ellipse at 40% 40%, black 45%, transparent 85%)',
+            WebkitMaskImage: 'radial-gradient(ellipse at 40% 40%, black 45%, transparent 85%)',
+          }}
+        >
           <img
-            src="/halloween/bg/desktop-bg.webp"
+            src="/halloween/bg/bg-frame1.webp"
             alt=""
             className="w-full h-full object-cover object-center"
             loading="eager"
             fetchPriority="high"
           />
-        </picture>
+        </div>
+
+        {/* Quadrant 2: Frame 2 (Top-Right: ETH Skeleton) */}
+        <div
+          className="drift-quadrant-2 absolute top-0 right-0 w-[55%] h-[55%] overflow-hidden pointer-events-none"
+          style={{
+            maskImage: 'radial-gradient(ellipse at 60% 40%, black 45%, transparent 85%)',
+            WebkitMaskImage: 'radial-gradient(ellipse at 60% 40%, black 45%, transparent 85%)',
+          }}
+        >
+          <img
+            src="/halloween/bg/bg-frame2.webp"
+            alt=""
+            className="w-full h-full object-cover object-center"
+            loading="eager"
+            fetchPriority="high"
+          />
+        </div>
+
+        {/* Quadrant 3: Frame 3 (Bottom-Left: Top Hat Skeleton) */}
+        <div
+          className="drift-quadrant-3 absolute bottom-0 left-0 w-[55%] h-[55%] overflow-hidden pointer-events-none"
+          style={{
+            maskImage: 'radial-gradient(ellipse at 40% 60%, black 45%, transparent 85%)',
+            WebkitMaskImage: 'radial-gradient(ellipse at 40% 60%, black 45%, transparent 85%)',
+          }}
+        >
+          <img
+            src="/halloween/bg/bg-frame3.webp"
+            alt=""
+            className="w-full h-full object-cover object-center"
+            loading="eager"
+          />
+        </div>
+
+        {/* Quadrant 4: Frame 4 (Bottom-Right: Blazing Skull) */}
+        <div
+          className="drift-quadrant-4 absolute bottom-0 right-0 w-[55%] h-[55%] overflow-hidden pointer-events-none"
+          style={{
+            maskImage: 'radial-gradient(ellipse at 60% 60%, black 45%, transparent 85%)',
+            WebkitMaskImage: 'radial-gradient(ellipse at 60% 60%, black 45%, transparent 85%)',
+          }}
+        >
+          <img
+            src="/halloween/bg/bg-frame4.webp"
+            alt=""
+            className="w-full h-full object-cover object-center"
+            loading="eager"
+          />
+        </div>
 
         {/* Diagonal Holographic Sheen Sweep (18s loop) */}
         {themeFx.cardSheen && (
@@ -425,10 +490,11 @@ export function HalloweenBackground() {
         )}
       </div>
 
-      {/* ── Layer 2: Per-Route Focus Cross-Fade (14px translation) ── */}
+      {/* ── Layer 2: Per-Route Focus Cross-Fade (30px Parallax) ── */}
       <div
         ref={layer2Ref}
-        className="absolute -inset-[30px] w-[calc(100%+60px)] h-[calc(100%+60px)] will-change-transform"
+        data-testid="parallax-layer-2"
+        className="absolute -inset-[60px] w-[calc(100%+120px)] h-[calc(100%+120px)] will-change-transform"
       >
         {focusConfig.image && (
           <img
@@ -440,16 +506,17 @@ export function HalloweenBackground() {
         )}
       </div>
 
-      {/* ── Layer 3: Fog Bands & Embers (20px translation) ── */}
+      {/* ── Layer 3: Fog Bands & Embers (42px Parallax) ── */}
       <div
         ref={layer3Ref}
-        className="absolute -inset-[30px] w-[calc(100%+60px)] h-[calc(100%+60px)] will-change-transform"
+        data-testid="parallax-layer-3"
+        className="absolute -inset-[60px] w-[calc(100%+120px)] h-[calc(100%+120px)] will-change-transform"
       >
         {/* Fog Band 1 (60s loop) */}
         {themeFx.fog && (
           <div
-            className={`fog-band-1 absolute inset-0 bg-gradient-to-t from-purple-950/20 via-transparent to-transparent mix-blend-screen pointer-events-none ${
-              multiballActive ? 'opacity-90' : 'opacity-40'
+            className={`fog-band-1 absolute inset-0 bg-gradient-to-t from-purple-950/25 via-transparent to-transparent mix-blend-screen pointer-events-none ${
+              multiballActive ? 'opacity-90' : 'opacity-45'
             }`}
           />
         )}
@@ -457,8 +524,8 @@ export function HalloweenBackground() {
         {/* Fog Band 2 (90s loop) */}
         {themeFx.fog && (
           <div
-            className={`fog-band-2 absolute inset-0 bg-gradient-to-b from-indigo-950/25 via-transparent to-transparent mix-blend-screen pointer-events-none ${
-              multiballActive ? 'opacity-95' : 'opacity-35'
+            className={`fog-band-2 absolute inset-0 bg-gradient-to-b from-indigo-950/30 via-transparent to-transparent mix-blend-screen pointer-events-none ${
+              multiballActive ? 'opacity-95' : 'opacity-40'
             }`}
           />
         )}
@@ -471,20 +538,21 @@ export function HalloweenBackground() {
         {/* Shockwave Ring from Ghost Banish */}
         {shockwaveKey && (
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <div className="w-[100px] h-[100px] rounded-full border-4 border-pumpkin/80 animate-ping" />
+            <div className="w-[120px] h-[120px] rounded-full border-4 border-pumpkin/90 animate-ping" />
           </div>
         )}
 
         {/* Jackpot Gold-Ember Flood */}
         {jackpotActive && (
-          <div className="absolute inset-0 bg-gradient-to-r from-amber-500/20 via-pumpkin/30 to-ember/20 animate-pulse pointer-events-none" />
+          <div className="absolute inset-0 bg-gradient-to-r from-amber-500/25 via-pumpkin/35 to-ember/25 animate-pulse pointer-events-none" />
         )}
       </div>
 
-      {/* ── Layer 4: Vignette, Moon, Cobwebs & Bats (Nearest: 28px translation) ── */}
+      {/* ── Layer 4: Vignette, Moon, Cobwebs & Bats (Nearest: 56px Parallax) ── */}
       <div
         ref={layer4Ref}
-        className="absolute -inset-[30px] w-[calc(100%+60px)] h-[calc(100%+60px)] will-change-transform"
+        data-testid="parallax-layer-4"
+        className="absolute -inset-[60px] w-[calc(100%+120px)] h-[calc(100%+120px)] will-change-transform"
       >
         {/* Radial Vignette: transparent center to #0a0712 at edges */}
         {themeFx.vignette && (
@@ -497,10 +565,10 @@ export function HalloweenBackground() {
           />
         )}
 
-        {/* Moon top-right with soft violet/white halo */}
+        {/* Moon top-right with soft halo */}
         {themeFx.moon && (
-          <div className="absolute top-10 right-14 w-28 h-28 rounded-full pointer-events-none">
-            <div className="w-full h-full rounded-full bg-gradient-to-br from-[#fff7e6] to-[#f0dfc4] shadow-[0_0_50px_rgba(240,223,196,0.4),0_0_100px_rgba(131,110,249,0.3)] opacity-85" />
+          <div className="absolute top-12 right-16 w-28 h-28 rounded-full pointer-events-none">
+            <div className="w-full h-full rounded-full bg-gradient-to-br from-[#fff7e6] to-[#f0dfc4] shadow-[0_0_55px_rgba(240,223,196,0.45),0_0_110px_rgba(131,110,249,0.35)] opacity-85" />
           </div>
         )}
 
@@ -547,7 +615,6 @@ export function HalloweenBackground() {
   );
 }
 
-// Bat Silhouette SVG component with CSS flying animation
 function Bat({ delay, duration, top, scale }: { delay: string; duration: string; top: string; scale: number }) {
   return (
     <div

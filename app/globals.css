@@ -251,6 +251,68 @@ body {
   animation: gentleSwayIdle 7s infinite ease-in-out reverse;
 }
 
+/* 4 Quadrant Continuous Drift Animations (runs without pointer input) */
+@keyframes quadrantDrift1 {
+  0% { transform: scale(1.06) translate3d(0%, 0%, 0); }
+  33% { transform: scale(1.12) translate3d(2.2%, 1.8%, 0); }
+  66% { transform: scale(1.08) translate3d(1.0%, -2.1%, 0); }
+  100% { transform: scale(1.06) translate3d(0%, 0%, 0); }
+}
+
+@keyframes quadrantDrift2 {
+  0% { transform: scale(1.07) translate3d(0%, 0%, 0); }
+  38% { transform: scale(1.13) translate3d(-2.4%, 1.5%, 0); }
+  72% { transform: scale(1.09) translate3d(-1.2%, -2.5%, 0); }
+  100% { transform: scale(1.07) translate3d(0%, 0%, 0); }
+}
+
+@keyframes quadrantDrift3 {
+  0% { transform: scale(1.08) translate3d(0%, 0%, 0); }
+  42% { transform: scale(1.12) translate3d(1.8%, -2.4%, 0); }
+  75% { transform: scale(1.14) translate3d(-1.5%, 1.2%, 0); }
+  100% { transform: scale(1.08) translate3d(0%, 0%, 0); }
+}
+
+@keyframes quadrantDrift4 {
+  0% { transform: scale(1.06) translate3d(0%, 0%, 0); }
+  35% { transform: scale(1.14) translate3d(-2.2%, -1.8%, 0); }
+  70% { transform: scale(1.10) translate3d(2.1%, 2.2%, 0); }
+  100% { transform: scale(1.06) translate3d(0%, 0%, 0); }
+}
+
+.drift-quadrant-1 {
+  animation: quadrantDrift1 31s infinite ease-in-out;
+}
+.drift-quadrant-2 {
+  animation: quadrantDrift2 37s infinite ease-in-out;
+  animation-delay: -9s;
+}
+.drift-quadrant-3 {
+  animation: quadrantDrift3 43s infinite ease-in-out;
+  animation-delay: -18s;
+}
+.drift-quadrant-4 {
+  animation: quadrantDrift4 47s infinite ease-in-out;
+  animation-delay: -25s;
+}
+
+/* Breathing Glow Light */
+@keyframes breathingWarm {
+  0%, 100% { opacity: 0.22; transform: scale(0.95); }
+  50% { opacity: 0.58; transform: scale(1.08); }
+}
+@keyframes breathingCold {
+  0%, 100% { opacity: 0.48; transform: scale(1.06); }
+  50% { opacity: 0.16; transform: scale(0.94); }
+}
+
+.glow-breathing-warm {
+  animation: breathingWarm 8s infinite ease-in-out;
+}
+.glow-breathing-cold {
+  animation: breathingCold 9s infinite ease-in-out;
+}
+
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
@@ -267,23 +329,31 @@ body {
   background: rgba(255, 122, 26, 0.7);
 }
 
-/* prefers-reduced-motion: freeze fog, embers, bats, flicker and cross-fades */
+/* prefers-reduced-motion: freeze fog, embers, bats, flicker and cross-fades by default, unless user overrides */
 @media (prefers-reduced-motion: reduce) {
-  *, ::before, ::after {
+  :root:not(.motion-forced) *,
+  :root:not(.motion-forced) ::before,
+  :root:not(.motion-forced) ::after {
     animation: none !important;
     animation-duration: 0.001ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
     scroll-behavior: auto !important;
   }
-  .fog-band-1,
-  .fog-band-2,
-  .holo-sheen,
-  .candle-flicker,
-  .idle-flicker,
-  .idle-pulse,
-  .idle-sway-1,
-  .idle-sway-2 {
+  :root:not(.motion-forced) .fog-band-1,
+  :root:not(.motion-forced) .fog-band-2,
+  :root:not(.motion-forced) .holo-sheen,
+  :root:not(.motion-forced) .candle-flicker,
+  :root:not(.motion-forced) .idle-flicker,
+  :root:not(.motion-forced) .idle-pulse,
+  :root:not(.motion-forced) .idle-sway-1,
+  :root:not(.motion-forced) .idle-sway-2,
+  :root:not(.motion-forced) .drift-quadrant-1,
+  :root:not(.motion-forced) .drift-quadrant-2,
+  :root:not(.motion-forced) .drift-quadrant-3,
+  :root:not(.motion-forced) .drift-quadrant-4,
+  :root:not(.motion-forced) .glow-breathing-warm,
+  :root:not(.motion-forced) .glow-breathing-cold {
     animation: none !important;
   }
 }
