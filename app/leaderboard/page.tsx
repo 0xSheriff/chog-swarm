@@ -24,14 +24,14 @@ export default function LeaderboardPage() {
   return (
     <div className="flex flex-col gap-6 py-2">
       {/* 1-Sentence Goal Banner */}
-      <div className="px-5 py-3.5 rounded-2xl bg-gradient-to-r from-chog-gold/20 via-chog-card to-amber-500/10 border border-chog-gold/30 flex items-center justify-between gap-4 shadow-lg">
+      <div className="px-5 py-3.5 rounded-2xl glass-panel flex items-center justify-between gap-4 shadow-lg border-pumpkin/30">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-chog-gold/20 border border-chog-gold/40 flex items-center justify-center text-chog-gold flex-shrink-0">
-            <Target className="w-5 h-5 text-chog-gold" />
+          <div className="w-9 h-9 rounded-xl bg-pumpkin/20 border border-pumpkin/40 flex items-center justify-center text-pumpkin flex-shrink-0">
+            <Target className="w-5 h-5 text-pumpkin" />
           </div>
           <div>
-            <span className="text-xs font-bold text-chog-gold uppercase tracking-wider block">Mode Goal</span>
-            <p className="text-sm font-medium text-white">
+            <span className="text-xs font-bold text-pumpkin uppercase tracking-wider block">Mode Goal</span>
+            <p className="text-sm font-medium text-bone">
               Review cryptographically verified daily scores reproduced deterministically on the server to prevent cheating.
             </p>
           </div>
@@ -39,44 +39,44 @@ export default function LeaderboardPage() {
       </div>
 
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-chog-card border border-chog-line rounded-2xl p-6 shadow-xl">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 glass-panel p-6 shadow-xl">
         <div>
           <div className="flex items-center gap-2">
-            <Trophy className="w-7 h-7 text-chog-gold" />
-            <h1 className="font-koulen text-4xl text-white tracking-wide">
-              GLOBAL <span className="text-chog-gold">HALL OF FAME</span>
+            <Trophy className="w-7 h-7 text-pumpkin" />
+            <h1 className="font-pirata text-5xl text-bone tracking-wide">
+              GLOBAL <span className="text-pumpkin">HALL OF FAME</span>
             </h1>
           </div>
-          <p className="text-xs text-chog-muted mt-1">
+          <p className="text-xs text-bone/65 mt-1 font-mono">
             Server-verified cryptographic leaderboards. Zero client trust • Anti-cheat re-simulation engine v1.0.
           </p>
         </div>
 
         <Link
           href="/gauntlet"
-          className="px-6 py-2.5 rounded-xl bg-chog-purple hover:bg-chog-purpleSoft text-white font-koulen text-lg tracking-wider flex items-center gap-2 shadow-lg shadow-chog-purple/20 transition-all cursor-pointer"
+          className="btn-gloss px-6 py-2.5 rounded-xl bg-gradient-to-r from-pumpkin to-ember hover:from-pumpkin hover:to-pumpkin text-void font-bold text-lg tracking-wider flex items-center gap-2 shadow-lg shadow-pumpkin/20 transition-all cursor-pointer"
         >
           Compete in Today's Gauntlet <ArrowUpRight className="w-4 h-4" />
         </Link>
       </div>
 
       {/* Info Callout */}
-      <div className="p-4 rounded-2xl bg-chog-surface1/60 border border-chog-line flex items-start gap-3 text-sm text-chog-text">
-        <Shield className="w-5 h-5 text-chog-purple flex-shrink-0 mt-0.5" />
+      <div className="p-4 rounded-2xl glass-panel flex items-start gap-3 text-sm text-bone">
+        <Shield className="w-5 h-5 text-pumpkin flex-shrink-0 mt-0.5" />
         <div>
-          <span className="font-bold text-white block">How Scores are Verified:</span>
+          <span className="font-bold text-bone block">How Scores are Verified:</span>
           When a player completes a Daily Gauntlet run, the backend server fetches the player’s NFT metadata, recompiles the policy, and executes the deterministic engine against today's seed ({seed}). Only if the server-reproduced score matches the submitted score exactly is the entry stamped with a cryptographic hash and entered into this registry.
         </div>
       </div>
 
       {/* Leaderboard Table */}
-      <div className="bg-chog-card border border-chog-line rounded-2xl overflow-hidden shadow-xl">
-        <div className="p-5 border-b border-chog-line flex items-center justify-between">
+      <div className="glass-panel overflow-hidden shadow-2xl">
+        <div className="p-5 border-b border-bone/10 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Calendar className="w-4 h-4 text-chog-muted" />
-            <span className="font-mono text-xs text-white font-bold">UTC Active Period: {dateKey}</span>
+            <Calendar className="w-4 h-4 text-bone/65" />
+            <span className="font-mono text-xs text-bone font-bold">UTC Active Period: {dateKey}</span>
           </div>
-          <div className="flex items-center gap-2 text-xs font-mono text-chog-muted">
+          <div className="flex items-center gap-2 text-xs font-mono text-bone/65">
             <Hash className="w-4 h-4" />
             <span>Seed: #{seed}</span>
           </div>

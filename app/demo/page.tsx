@@ -74,7 +74,7 @@ export default function DemoPage() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         <div className="lg:col-span-7 flex flex-col gap-5">
           <div className="flex items-center justify-between">
-            <h2 className="font-koulen text-2xl text-white">
+            <h2 className="font-pirata text-3xl text-bone tracking-wide">
               RECORDED MATCH REPLAY • SEED #888143
             </h2>
             <span className="text-xs font-mono text-chog-energy font-bold">

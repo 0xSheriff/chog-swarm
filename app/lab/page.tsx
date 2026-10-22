@@ -155,10 +155,10 @@ export default function TraitLabPage() {
         <div>
           <div className="flex items-center gap-2">
             <Cpu className="w-6 h-6 text-chog-diverge" />
-            <h1 className="font-koulen text-3xl text-white tracking-wide">
-              TRAIT <span className="text-chog-diverge">LAB</span>
+            <h1 className="font-pirata text-4xl text-bone tracking-wide">
+              TRAIT <span className="text-pumpkin">LAB</span>
             </h1>
-            <span className="px-2.5 py-0.5 rounded text-xs font-sans bg-chog-diverge/20 text-chog-diverge border border-chog-diverge/30 font-bold">
+            <span className="px-2.5 py-0.5 rounded text-xs font-sans bg-pumpkin/20 text-pumpkin border border-pumpkin/30 font-bold">
               NOVELTY 30%
             </span>
           </div>

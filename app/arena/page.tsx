@@ -357,10 +357,10 @@ function ArenaContent() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-chog-card border border-chog-line rounded-2xl p-4 shadow-xl">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="font-koulen text-3xl text-white tracking-wide">
-              {isRaceV1 ? 'CIRCUIT' : 'TACTICAL'} <span className="text-chog-purple">{isRaceV1 ? 'RACE ARENA' : 'ARENA'}</span>
+            <h1 className="font-pirata text-4xl text-bone tracking-wide">
+              {isRaceV1 ? 'CIRCUIT' : 'TACTICAL'} <span className="text-pumpkin">{isRaceV1 ? 'RACE ARENA' : 'ARENA'}</span>
             </h1>
-            <span className="px-2.5 py-0.5 rounded text-xs font-mono bg-chog-purple/20 border border-chog-purple/40 text-chog-purpleSoft">
+            <span className="px-2.5 py-0.5 rounded text-xs font-mono bg-pumpkin/20 border border-pumpkin/40 text-pumpkin">
               {isRaceV1 ? 'Ruleset race-v1' : 'Deterministic v1.0'}
             </span>
           </div>

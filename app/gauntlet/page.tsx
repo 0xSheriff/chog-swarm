@@ -213,11 +213,11 @@ export default function DailyGauntletPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-chog-card border border-chog-line rounded-2xl p-5 shadow-xl">
         <div>
           <div className="flex items-center gap-2">
-            <Award className="w-6 h-6 text-chog-gold" />
-            <h1 className="font-koulen text-3xl text-white tracking-wide">
-              DAILY <span className="text-chog-gold">GAUNTLET</span>
+            <Award className="w-6 h-6 text-pumpkin" />
+            <h1 className="font-pirata text-4xl text-bone tracking-wide">
+              DAILY <span className="text-pumpkin">GAUNTLET</span>
             </h1>
-            <span className="px-2.5 py-0.5 rounded text-xs font-sans bg-chog-gold/20 text-chog-gold border border-chog-gold/30 font-bold">
+            <span className="px-2.5 py-0.5 rounded text-xs font-sans bg-pumpkin/20 text-pumpkin border border-pumpkin/30 font-bold">
               RETENTION 20%
             </span>
           </div>

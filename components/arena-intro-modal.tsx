@@ -52,8 +52,8 @@ export function ArenaIntroModal({ forceOpen = false, onClose }: ArenaIntroModalP
   ];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-in fade-in duration-200">
-      <div className="w-full max-w-xl bg-chog-card border border-chog-lineBright rounded-3xl p-6 sm:p-8 shadow-2xl flex flex-col gap-6 relative overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0a0712]/75 backdrop-blur-md animate-in fade-in duration-200">
+      <div className="w-full max-w-xl glass-panel p-6 sm:p-8 shadow-2xl flex flex-col gap-6 relative overflow-hidden">
         {/* Glow accent */}
         <div className="absolute top-0 right-0 w-64 h-64 bg-chog-purple/15 rounded-full blur-3xl pointer-events-none" />
 

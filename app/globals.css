@@ -1,25 +1,32 @@
-@import url('https://fonts.googleapis.com/css2?family=Convergence&family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Koulen&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Convergence&family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Koulen&family=Pirata+One&display=swap');
 @import "tailwindcss";
 
 @theme {
-  --color-chog-base: #0E0B1A;
-  --color-chog-surface1: #141026;
-  --color-chog-surface2: #181330;
-  --color-chog-card: #161228;
+  --color-chog-base: transparent;
+  --color-chog-surface1: rgba(10, 7, 18, 0.72);
+  --color-chog-surface2: rgba(14, 10, 24, 0.82);
+  --color-chog-card: rgba(10, 7, 18, 0.72);
   --color-chog-purple: #836EF9;
   --color-chog-purpleSoft: #A99BFC;
   --color-chog-cheek: #FF6289;
   --color-chog-gold: #F59E0B;
-  --color-chog-line: rgba(244, 241, 254, 0.10);
-  --color-chog-lineBright: rgba(169, 155, 252, 0.28);
-  --color-chog-text: #F4F1FE;
-  --color-chog-muted: rgba(244, 241, 254, 0.65);
+  --color-chog-line: rgba(239, 230, 210, 0.12);
+  --color-chog-lineBright: rgba(255, 122, 26, 0.35);
+  --color-chog-text: #efe6d2;
+  --color-chog-muted: rgba(239, 230, 210, 0.65);
   --color-chog-energy: #5CE68A;
-  --color-chog-hazard: #EF4444;
+  --color-chog-hazard: #ff3b1f;
   --color-chog-coop: #22D3EE;
   --color-chog-diverge: #F43F5E;
 
+  --color-bone: #efe6d2;
+  --color-pumpkin: #ff7a1a;
+  --color-ember: #ff3b1f;
+  --color-ghost-blue: #3b5bff;
+  --color-void: #0a0712;
+
   --font-koulen: 'Koulen', Impact, sans-serif;
+  --font-pirata: 'Pirata One', cursive, display;
   --font-inter: 'Inter', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
   --font-fraunces: 'Fraunces', Georgia, serif;
@@ -27,17 +34,221 @@
 
 :root {
   --font-koulen: 'Koulen', Impact, sans-serif;
+  --font-pirata: 'Pirata One', cursive, display;
   --font-inter: 'Inter', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
   --font-fraunces: 'Fraunces', Georgia, serif;
+
+  --mx: 0;
+  --my: 0;
+  --scroll-y: 0;
+}
+
+html {
+  background-color: #0a0712;
 }
 
 body {
-  background-color: #0E0B1A;
-  color: #F4F1FE;
+  background-color: transparent !important;
+  color: #efe6d2;
   font-family: var(--font-inter);
   overflow-x: hidden;
   min-height: 100vh;
+}
+
+/* Glass Panels */
+.glass-panel,
+.bg-chog-card,
+.bg-chog-surface1,
+.bg-chog-surface2 {
+  position: relative;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.glass-panel {
+  background-color: rgba(10, 7, 18, 0.72) !important;
+  border: 1px solid rgba(239, 230, 210, 0.12);
+  color: #efe6d2;
+  border-radius: 0.75rem;
+  overflow: hidden;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+/* Panel Edge Light: 1px inner top border rgba(255,255,255,0.28), 1px inner bottom border rgba(0,0,0,0.4) */
+.glass-panel::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28), inset 0 -1px 0 rgba(0, 0, 0, 0.4);
+  z-index: 1;
+}
+
+/* Specular Sheen (follows pointer --panel-x, --panel-y) */
+.glass-sheen {
+  position: relative;
+}
+.glass-sheen::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: radial-gradient(circle at var(--panel-x, 50%) var(--panel-y, 50%), rgba(255, 255, 255, 0.14) 0%, transparent 60%);
+  opacity: 0;
+  transition: opacity 0.25s ease;
+  z-index: 2;
+}
+.glass-sheen:hover::after {
+  opacity: 1;
+}
+
+/* Primary Button Gloss Band & Hover Light Sweep */
+.btn-gloss {
+  position: relative;
+  overflow: hidden;
+  transition: transform 90ms ease, filter 90ms ease;
+}
+.btn-gloss::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 50%;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0) 100%);
+  pointer-events: none;
+  border-top-left-radius: inherit;
+  border-top-right-radius: inherit;
+}
+.btn-gloss::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -120%;
+  width: 60%;
+  height: 200%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.35), transparent);
+  transform: skewX(-20deg);
+  pointer-events: none;
+  transition: none;
+}
+.btn-gloss:hover::after {
+  left: 150%;
+  transition: left 500ms ease-out;
+}
+.btn-gloss:active {
+  transform: translateY(2px) scale(0.99);
+  filter: brightness(0.88);
+}
+
+/* Candle Flicker for Footer Mark */
+@keyframes candleFlicker {
+  0%, 100% {
+    filter: drop-shadow(0 0 6px rgba(255, 122, 26, 0.5)) drop-shadow(0 0 14px rgba(255, 59, 31, 0.35));
+    opacity: 0.95;
+  }
+  20% {
+    filter: drop-shadow(0 0 10px rgba(255, 122, 26, 0.75)) drop-shadow(0 0 20px rgba(255, 59, 31, 0.55));
+    opacity: 1;
+  }
+  40% {
+    filter: drop-shadow(0 0 5px rgba(255, 122, 26, 0.4)) drop-shadow(0 0 12px rgba(255, 59, 31, 0.25));
+    opacity: 0.88;
+  }
+  60% {
+    filter: drop-shadow(0 0 9px rgba(255, 122, 26, 0.7)) drop-shadow(0 0 18px rgba(255, 59, 31, 0.45));
+    opacity: 0.98;
+  }
+  80% {
+    filter: drop-shadow(0 0 7px rgba(255, 122, 26, 0.55)) drop-shadow(0 0 15px rgba(255, 59, 31, 0.35));
+    opacity: 0.92;
+  }
+}
+.candle-flicker {
+  animation: candleFlicker 4s infinite ease-in-out;
+}
+
+/* Fog Drift Animations */
+@keyframes fogDrift1 {
+  0% { transform: translate3d(-10%, 0, 0); }
+  50% { transform: translate3d(10%, -2%, 0); }
+  100% { transform: translate3d(-10%, 0, 0); }
+}
+@keyframes fogDrift2 {
+  0% { transform: translate3d(10%, 0, 0); }
+  50% { transform: translate3d(-10%, 2%, 0); }
+  100% { transform: translate3d(10%, 0, 0); }
+}
+.fog-band-1 {
+  animation: fogDrift1 60s infinite ease-in-out;
+}
+.fog-band-2 {
+  animation: fogDrift2 90s infinite ease-in-out;
+}
+
+/* Holographic Sheen Sweep (every 18s) */
+@keyframes holoSheen {
+  0%, 85% {
+    opacity: 0;
+    transform: translate3d(-100%, -100%, 0) rotate(25deg);
+  }
+  87% {
+    opacity: 0.08;
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(200%, 200%, 0) rotate(25deg);
+  }
+}
+.holo-sheen {
+  animation: holoSheen 18s infinite linear;
+}
+
+/* Tombstone Frame Style for Landing Hero */
+.tombstone-frame {
+  clip-path: polygon(
+    0% 25%,
+    10% 12%,
+    25% 4%,
+    50% 0%,
+    75% 4%,
+    90% 12%,
+    100% 25%,
+    100% 100%,
+    0% 100%
+  );
+}
+
+/* Idle Motion for Hero Portraits */
+@keyframes flameFlickerIdle {
+  0%, 100% { filter: brightness(1) drop-shadow(0 0 15px rgba(255, 122, 26, 0.4)); }
+  25% { filter: brightness(1.15) drop-shadow(0 0 25px rgba(255, 122, 26, 0.7)); }
+  50% { filter: brightness(0.92) drop-shadow(0 0 10px rgba(255, 122, 26, 0.3)); }
+  75% { filter: brightness(1.08) drop-shadow(0 0 20px rgba(255, 122, 26, 0.6)); }
+}
+@keyframes emberPulseIdle {
+  0%, 100% { filter: drop-shadow(0 0 12px rgba(255, 59, 31, 0.4)); transform: scale(1); }
+  50% { filter: drop-shadow(0 0 28px rgba(255, 59, 31, 0.8)); transform: scale(1.02); }
+}
+@keyframes gentleSwayIdle {
+  0%, 100% { transform: rotate(-2deg); }
+  50% { transform: rotate(2deg); }
+}
+
+.idle-flicker {
+  animation: flameFlickerIdle 5s infinite ease-in-out;
+}
+.idle-pulse {
+  animation: emberPulseIdle 4s infinite ease-in-out;
+}
+.idle-sway-1 {
+  animation: gentleSwayIdle 6s infinite ease-in-out;
+}
+.idle-sway-2 {
+  animation: gentleSwayIdle 7s infinite ease-in-out reverse;
 }
 
 /* Custom Scrollbar */
@@ -46,21 +257,33 @@ body {
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #0E0B1A;
+  background: #0a0712;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(169, 155, 252, 0.25);
+  background: rgba(255, 122, 26, 0.35);
   border-radius: 999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(131, 110, 249, 0.6);
+  background: rgba(255, 122, 26, 0.7);
 }
 
+/* prefers-reduced-motion: freeze fog, embers, bats, flicker and cross-fades */
 @media (prefers-reduced-motion: reduce) {
   *, ::before, ::after {
-    animation-duration: 0.01ms !important;
+    animation: none !important;
+    animation-duration: 0.001ms !important;
     animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
+    transition-duration: 0.001ms !important;
     scroll-behavior: auto !important;
+  }
+  .fog-band-1,
+  .fog-band-2,
+  .holo-sheen,
+  .candle-flicker,
+  .idle-flicker,
+  .idle-pulse,
+  .idle-sway-1,
+  .idle-sway-2 {
+    animation: none !important;
   }
 }

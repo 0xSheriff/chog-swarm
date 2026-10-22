@@ -17,46 +17,44 @@ Chog Swarm is a premium-tier autonomous web game built for Chogathon 2026 (choga
 - **Styling**: Tailwind CSS / CSS Modules with custom Chog design tokens (dark graphite base, authentic Chog brand accents, warm neutrals, bespoke typography)
 
 ## 4. Current State
-- **ALL 6 FIX PASS PHASES COMPLETE & FULLY VERIFIED**:
-  - **Phase 1 (Images)**: 1,969 local 512px WebP images in `/public/chogs/{id}.webp`, SVG fallback, build verification script in `package.json`.
-  - **Phase 2 (Favicon & Brand)**: `/app/icon.png`, `/app/apple-icon.png`, `/app/favicon.ico`, Open Graph tags & image, metadata configured.
-  - **Phase 3 (Honest Data)**: Zero seeded rows, contract addresses forbidden, designed empty state, real on-chain owner checks, Firestore + persistent disk fallback.
-  - **Phase 4 (Wallet)**: RainbowKit modal, Monad Mainnet (Chain ID 143), network switch prompt, NFT selector, server-side re-simulation on spawn & score submit, viem signed proofs.
-  - **Phase 5 (Clarity)**: 3-step "How it works" on landing, first-visit overlay in arena, full interactive tile legend, 1-sentence goals on all modes, pre-match turn 0 cars on grid, auto-run on first load, typography (body >= 14px, labels >= 12px, mono for numbers/hashes/logs), full screen width (1680px max-width), large Chog art in inspector.
-  - **Phase 6 (Race Mode - Primary Mode)**:
-    - Pure deterministic ruleset `race-v1` with closed-circuit 14x14 track, start grid, 3 sequential checkpoints (CP1, CP2, CP3), checkered finish line, boost pads (`+BOOST`), oil slicks, risky shortcut corridor, turbo fuel management, and slipstream drafting.
-    - Traits mapped: Speed -> top speed & sprints; Risk -> shortcut tendency; Cooperation -> slipstream drafting & slingshot pass; Special Action -> turbo burst ignition.
-    - 4-car championship races with live circuit rank badges (`1st`, `2nd`, `3rd`, `4th`), live fuel gauges, and flame trails.
-    - Balance benchmark across 1,000 championship races: Sprinter 25.0%, Safe Cruiser 19.2%, Shortcut Daredevil 34.6%, Drafting Tactician 21.2% (spread 19%–35%, no trait dominates).
-    - Daily Gauntlet updated to daily track seed scored by fastest finish time, server re-simulated with anti-cheat verification and cryptographic signatures.
-    - Trait Lab updated to race-v1 track with counterfactual mutation and prominent first-divergence detection & jump-to-turn controls.
-    - Classic grid ruleset `v1.0` untouched and versioned for full backward compatibility.
-    - 8/8 unit tests pass in Vitest; production build passes with 0 errors.
+- **HALLOWEEN VISUAL THEME IMPLEMENTED & FULLY VERIFIED (ALL CHECKS PASS)**:
+  - **Global Layered Background**: Mounted in `app/layout.tsx` across all routes. Composed of 2x2 diagonal mosaic, responsive sizes (`desktop-bg.webp` 137KB, `tablet-bg.webp` 51KB, `mobile-bg.webp` 50KB vertical stack) and per-frame variants (`bg-frame1.webp` through `bg-frame4.webp`).
+  - **Per-Route Focus Cross-Fade**: Slow 600ms cross-fade between route variants: Landing (full collage), Arena/Race (Frame 4), Lab (Frame 2), Gauntlet & Leaderboard (Frame 3), Demo (Frame 1).
+  - **4-Layer Parallax Motion Engine**: Depth parallax with smooth lerp (factor 0.08) in single rAF loop via `--mx` and `--my`, scroll vertical parallax (0.15x), and idle Lissajous auto-drift fallback.
+  - **Ambient Life & Effects**: Vignette gradient, 2 drifting fog bands (60s & 90s), interactive canvas embers (up to 40 particles + cursor repulsion & trail), bats silhouettes, soft moon halo, corner cobwebs, and 18s holographic sheen sweeps.
+  - **Landing Page Hero**: 4 tombstone-arched framed portraits with 3D tilt (max 8deg with perspective 900px), glare layer, idle motion (frame 1 flickers, frame 4 pulses, frames 2/3 sway), and periodic eye flashes (45-90s).
+  - **Brand Assets**: Favicon (`app/favicon.ico`), Apple icon (`app/apple-icon.png`), app icon (`app/icon.png`), and header logo & footer mark derived directly from Frame 1 (`public/frame1.jpg`) with candle-flicker glow.
+  - **Glass Panel Styling**: Dark glass `rgba(10, 7, 18, 0.72)` with `backdrop-filter: blur(10px)`, 1px border `rgba(239, 230, 210, 0.12)`, specular sheen tracking pointer hover (`--panel-x`, `--panel-y`), button gloss sweeps, and bone white text (`#efe6d2`) with WCAG AA 16.08:1 contrast.
+  - **Game-Reactive Events**: `chog:fx` CustomEvent channel supporting bumper, slingshot, ghostBanish, multiball, drain, and jackpot visual reactions.
+  - **Acceptance Deliverables**: 12 route screenshots (`public/screenshots/bg-<route>-desktop.png` and `mobile.png`) and 15s recorded video demo (`public/screenshots/halloween-reactive-demo.webm`).
 
 ## 5. Recent Changes
-- Completed Phase 6 (Race Mode):
-  - Authored `packages/engine/src/race-engine.ts` with complete track generation, checkpoint progression, physics, drafting, and checksum calculations.
-  - Extended `packages/engine/src/types.ts` and `packages/engine/src/engine.ts` to dispatch `race-v1`.
-  - Implemented high-fidelity `renderRaceMode` in `components/arena-canvas.tsx` with asphalt texturing, energy gates, boost chevrons, and aerodynamic racer sprites.
-  - Updated `app/arena/page.tsx`, `app/gauntlet/page.tsx`, and `app/lab/page.tsx` to `race-v1`.
-  - Updated `app/api/gauntlet/submit/route.ts` and `lib/leaderboard-store.ts` for finish time scoring and 4-car server re-simulation.
-  - Verified 1,000-race Monte Carlo simulation via `scripts/race-balance-test.ts`.
-  - Verified 8/8 unit tests in `tests/race.test.ts` and `tests/engine.test.ts`.
-  - Built and verified production Next.js bundle with all 16 routes.
-  - Captured full-resolution screenshots of every page in `/public/screenshots/`.
+- Created `scripts/build-halloween-bg.ts` and generated optimized WebP assets in `public/halloween/bg/`.
+- Created `scripts/build-favicons.mjs` and generated `app/icon.png`, `app/apple-icon.png`, `app/favicon.ico` with proper RGBA channels.
+- Authored `lib/theme-fx.ts` configuration flags for all effects.
+- Implemented `components/halloween-bg.tsx` (fixed multi-depth background with canvas embers, fog, bats, moon, and sheen).
+- Implemented `components/halloween-effects.tsx` (glass specular sheen and smoke wipe route transitions).
+- Created `components/landing-hero-portraits.tsx` (tombstone-arched 3D tilt portraits with idle motions and eye flashes).
+- Updated `app/globals.css` with Pirata One font, Halloween color tokens, `.glass-panel`, `.btn-gloss`, and animations.
+- Updated `components/navbar.tsx` with Frame 1 flame logo and Pirata One wordmark.
+- Updated `app/layout.tsx` to mount `<HalloweenBackground />` and `<HalloweenEffects />` and frame 1 footer mark.
+- Converted `app/page.tsx`, `app/arena/page.tsx`, `app/lab/page.tsx`, `app/gauntlet/page.tsx`, `app/leaderboard/page.tsx`, and `app/demo/page.tsx` to glass styling and bone typography.
+- Created `scripts/verify-halloween-theme.ts` automated acceptance suite; verified all checks pass and generated demo video.
 
 ## 6. Important Decisions
-- **Race Mode as Primary Game Loop**: `race-v1` ruleset is default in Arena, Gauntlet, and Trait Lab, while `v1.0` is preserved for historical and offline replay safety.
-- **Sequential Checkpoint Enforcement**: Racers must clear CP1 -> CP2 -> CP3 in exact order before the finish line registers.
-- **Finish Time Metric**: Leaderboard prioritizes lowest finish turn (earliest cross of the line) with total match score as the tiebreaker.
-- **Dynamic Shortcut Navigation**: When an agent commits to the high-risk shortcut, targeting switches dynamically from shortcut entrance to apex to exit, avoiding backward ping-pong.
-- **Cryptographic Score Attestation**: Every submitted leaderboard entry requires a wallet signature binding address + seed + score + checksum, validated on the server via viem `verifyMessage`.
+- **Unaltered Chog NFT Art (Rule A)**: Gameplay Chog art in `/public/chogs/*.webp` remains pixel-identical. Darkening and tinting apply exclusively to background WebP collage copies.
+- **Single Source of Truth FX Flags**: All effects are toggled via boolean flags in `lib/theme-fx.ts`.
+- **High Performance Architecture**: Single rAF loop for pointer & parallax, paused on tab hidden (`visibilitychange`), adaptive quality step-down if FPS < 52.
+- **Accessibility**: Full `prefers-reduced-motion` compliance freezing all animations, with 16.08:1 WCAG AA text contrast.
 
 ## 7. Known Issues
 - None.
 
 ## 8. Current Task
-- Deliver comprehensive Final Report for FIX PASS FOR CHOG SWARM covering fixes per phase, test limitations without real wallet, and page screenshots.
+- Deliver Halloween Visual Theme verification report and push to GitHub origin.
+
+## 9. Next Steps
+- Await user review and playtest of the Halloween theme.
 
 ## 9. Next Steps
 - Present the final report to the user.

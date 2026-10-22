@@ -69,20 +69,22 @@ export function Navbar() {
         </div>
       )}
 
-      <header className="sticky top-0 z-40 w-full border-b border-chog-line bg-chog-base/85 backdrop-blur-md">
+      <header className="sticky top-0 z-40 w-full border-b border-chog-line bg-[#0a0712]/80 backdrop-blur-md">
         <div className="max-w-[1680px] mx-auto px-4 sm:px-6 lg:px-8 h-18 flex items-center justify-between gap-4 py-3">
           {/* Brand */}
           <Link href="/" className="flex items-center gap-3 group">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-chog-purple to-chog-purpleSoft p-0.5 shadow-lg shadow-chog-purple/20">
-              <div className="w-full h-full bg-chog-card rounded-[10px] flex items-center justify-center text-chog-purple group-hover:scale-105 transition-transform">
-                <Zap className="w-5 h-5 text-chog-purple fill-chog-purple" />
-              </div>
+            <div className="w-11 h-11 rounded-xl p-0.5 bg-gradient-to-br from-pumpkin to-ember shadow-lg shadow-pumpkin/25 overflow-hidden transition-transform group-hover:scale-105">
+              <img
+                src="/frame1.jpg"
+                alt="Chog Swarm Flame Logo"
+                className="w-full h-full object-cover rounded-[10px]"
+              />
             </div>
             <div>
-              <span className="font-koulen text-2xl tracking-wide text-white flex items-center gap-1.5">
-                CHOG <span className="text-chog-purple">SWARM</span>
+              <span className="font-pirata text-3xl tracking-wide text-bone flex items-center gap-1.5 leading-none">
+                CHOG <span className="text-pumpkin">SWARM</span>
               </span>
-              <span className="block text-[10px] font-mono tracking-widest text-chog-muted uppercase -mt-1">
+              <span className="block text-[10px] font-mono tracking-widest text-chog-muted uppercase mt-0.5">
                 Autonomous Agent Arena
               </span>
             </div>
