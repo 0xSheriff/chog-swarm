@@ -1,0 +1,299 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+  </head>
+  <body>
+    <template>
+      <style>
+        @font-face {
+          font-family: 'Pirata One';
+          src: url('assets/fonts/PirataOne-Regular.ttf') format('truetype');
+          font-weight: 400;
+          font-style: normal;
+        }
+
+        #root {
+          position: absolute;
+          inset: 0;
+          perspective: 1400px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: #030206;
+          color: #efe6d2;
+          font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+          overflow: hidden;
+        }
+
+        .bg-video-layer {
+          position: absolute;
+          inset: 0;
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          opacity: 0.28;
+          filter: saturate(1.1) brightness(0.65);
+          pointer-events: none;
+        }
+
+        .stage-vignette {
+          position: absolute;
+          inset: 0;
+          background: radial-gradient(circle at center, transparent 35%, #030206 90%);
+          pointer-events: none;
+        }
+
+        .browser-viewport-wrapper {
+          position: relative;
+          width: 1400px;
+          height: 840px;
+          transform-style: preserve-3d;
+        }
+
+        .browser-window {
+          position: absolute;
+          inset: 0;
+          border-radius: 16px;
+          background: rgba(10, 7, 18, 0.95);
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          box-shadow: 0 45px 120px rgba(0, 0, 0, 0.9), 0 0 60px rgba(255, 122, 26, 0.12);
+          overflow: hidden;
+          display: flex;
+          flex-direction: column;
+        }
+
+        .browser-chrome-bar {
+          height: 48px;
+          background: rgba(20, 15, 32, 0.95);
+          border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+          display: flex;
+          align-items: center;
+          padding: 0 18px;
+          gap: 16px;
+        }
+
+        .traffic-lights {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+
+        .traffic-dot {
+          width: 12px;
+          height: 12px;
+          border-radius: 50%;
+        }
+        .dot-red { background: #ff5f56; }
+        .dot-yellow { background: #ffbd2e; }
+        .dot-green { background: #27c93f; }
+
+        .url-bar {
+          flex: 1;
+          max-width: 480px;
+          height: 28px;
+          background: rgba(0, 0, 0, 0.4);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          border-radius: 6px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 12px;
+          color: rgba(239, 230, 210, 0.6);
+          font-family: monospace;
+          letter-spacing: 0.02em;
+        }
+
+        .browser-content {
+          flex: 1;
+          position: relative;
+          background: #0a0712;
+          overflow: hidden;
+        }
+
+        .real-footage-video {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          display: block;
+        }
+
+        .step-badge {
+          position: absolute;
+          top: 60px;
+          left: 80px;
+          display: flex;
+          align-items: center;
+          gap: 16px;
+          z-index: 25;
+        }
+
+        .step-number {
+          font-family: 'Pirata One', cursive;
+          font-size: 64px;
+          color: #ff7a1a;
+          line-height: 1;
+          text-shadow: 0 0 25px rgba(255, 122, 26, 0.5);
+        }
+
+        .step-label {
+          font-size: 18px;
+          font-weight: 700;
+          letter-spacing: 0.18em;
+          text-transform: uppercase;
+          color: #efe6d2;
+        }
+
+        .overlay-card {
+          position: absolute;
+          bottom: 70px;
+          left: 80px;
+          max-width: 520px;
+          padding: 24px 32px;
+          background: rgba(10, 7, 18, 0.92);
+          backdrop-filter: blur(20px);
+          border: 1px solid rgba(255, 122, 26, 0.35);
+          border-radius: 16px;
+          box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 30px rgba(255, 122, 26, 0.2);
+          z-index: 25;
+          opacity: 0;
+        }
+
+        .card-tag {
+          font-size: 12px;
+          font-weight: 700;
+          letter-spacing: 0.16em;
+          text-transform: uppercase;
+          color: #ff7a1a;
+          margin-bottom: 8px;
+          display: flex;
+          align-items: center;
+          gap: 6px;
+        }
+
+        .card-tag::before {
+          content: '';
+          width: 6px;
+          height: 6px;
+          border-radius: 50%;
+          background: #ff7a1a;
+        }
+
+        .card-title {
+          font-family: 'Pirata One', cursive;
+          font-size: 40px;
+          line-height: 1.05;
+          color: #efe6d2;
+          margin-bottom: 8px;
+        }
+
+        .card-body {
+          font-size: 16px;
+          line-height: 1.5;
+          color: rgba(239, 230, 210, 0.75);
+        }
+      </style>
+
+      <div id="root" data-composition-id="c2-auth-and-pick" data-width="1920" data-height="1080">
+        <video
+          id="c2-bg-loop"
+          class="bg-video-layer"
+          src="assets/media/halloween-background-loop.mp4"
+          data-start="0"
+          data-duration="26"
+          muted
+          playsinline
+        ></video>
+        <div class="stage-vignette"></div>
+
+        <div id="c2-step" class="step-badge" data-layout-ignore>
+          <div class="step-number">01</div>
+          <div class="step-label">SELECT CHOG & COMPILE POLICY</div>
+        </div>
+
+        <div id="c2-browser" class="browser-viewport-wrapper" data-layout-allow-overflow>
+          <div class="browser-window">
+            <div class="browser-chrome-bar">
+              <div class="traffic-lights">
+                <span class="traffic-dot dot-red"></span>
+                <span class="traffic-dot dot-yellow"></span>
+                <span class="traffic-dot dot-green"></span>
+              </div>
+              <div class="url-bar" data-layout-ignore data-layout-allow-overflow>https://chog-swarm.vercel.app/arena</div>
+            </div>
+            <div class="browser-content">
+              <video
+                id="c2-footage"
+                class="real-footage-video"
+                src="assets/media/scene2-creator-pass-arena.mp4"
+                data-start="0"
+                data-duration="26"
+                muted
+                playsinline
+              ></video>
+            </div>
+          </div>
+        </div>
+
+        <div id="c2-card" class="overlay-card">
+          <div class="card-tag" data-layout-ignore>Verified Authentication</div>
+          <div class="card-title">NFT IDENTITY COMPILES TO CODE</div>
+          <div class="card-body" data-layout-ignore>
+            Ownership determines agent physics, aggression, and flipper response.
+          </div>
+        </div>
+      </div>
+
+      <script>
+        const tl = gsap.timeline({ paused: true });
+
+        // Tilted entrance from opposite side
+        tl.fromTo(
+          "#c2-browser",
+          { rotateX: 10, rotateY: 14, rotateZ: -1.5, scale: 0.9, opacity: 0 },
+          { rotateX: 6, rotateY: 8, rotateZ: -0.5, scale: 0.96, opacity: 1, duration: 1.4, ease: "power3.out" },
+          0.0
+        );
+
+        tl.fromTo(
+          "#c2-step",
+          { y: -30, opacity: 0 },
+          { y: 0, opacity: 1, duration: 0.8, ease: "power2.out" },
+          0.4
+        );
+
+        // Drift as modal is selected
+        tl.to(
+          "#c2-browser",
+          { rotateX: 4, rotateY: 4, rotateZ: 0, scale: 1.0, duration: 14.0, ease: "sine.inOut" },
+          1.4
+        );
+
+        // Push in on the Start Race button
+        tl.to(
+          "#c2-browser",
+          { rotateX: 0, rotateY: 0, scale: 1.25, x: 0, y: -60, duration: 1.4, ease: "power3.inOut" },
+          16.0
+        );
+
+        // Headline card reveal
+        tl.fromTo(
+          "#c2-card",
+          { x: -50, opacity: 0 },
+          { x: 0, opacity: 1, duration: 0.8, ease: "power3.out" },
+          16.8
+        );
+
+        // Transition out
+        tl.to(
+          "#c2-browser, #c2-card, #c2-step",
+          { opacity: 0, scale: 0.95, duration: 0.6, ease: "power2.in" },
+          25.4
+        );
+
+        window.__timelines["c2-auth-and-pick"] = tl;
+        tl.seek(0);
+      </script>
+    </template>
+  </body>
+</html>

@@ -1,0 +1,142 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+  </head>
+  <body>
+    <template>
+      <style>
+        @font-face {
+          font-family: 'Pirata One';
+          src: url('assets/fonts/PirataOne-Regular.ttf') format('truetype');
+          font-weight: 400;
+          font-style: normal;
+        }
+
+        #root {
+          position: absolute;
+          inset: 0;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          background: radial-gradient(circle at center, #150d26 0%, #030206 75%);
+          color: #efe6d2;
+          font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+          overflow: hidden;
+        }
+
+        .logo-frame {
+          width: 180px;
+          height: 180px;
+          border-radius: 32px;
+          overflow: hidden;
+          border: 2px solid rgba(255, 122, 26, 0.5);
+          box-shadow: 0 0 60px rgba(255, 122, 26, 0.35), 0 30px 60px rgba(0, 0, 0, 0.9);
+          margin-bottom: 24px;
+          background: #000000;
+        }
+
+        /* Rule A: Chog NFT displayed full image, no tint, no blur, original aspect ratio */
+        .chog-logo-img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          display: block;
+        }
+
+        .title-main {
+          font-family: 'Pirata One', cursive, fantasy;
+          font-size: 104px;
+          letter-spacing: 0.04em;
+          line-height: 1;
+          color: #ff7a1a;
+          text-shadow: 0 0 45px rgba(255, 122, 26, 0.55), 0 4px 14px rgba(0, 0, 0, 0.9);
+          margin-bottom: 12px;
+          text-align: center;
+        }
+
+        .title-sub {
+          font-size: 28px;
+          letter-spacing: 0.16em;
+          text-transform: uppercase;
+          font-weight: 600;
+          color: #efe6d2;
+          opacity: 0.9;
+          margin-bottom: 24px;
+          text-align: center;
+        }
+
+        .url-pill {
+          display: inline-flex;
+          align-items: center;
+          gap: 12px;
+          padding: 12px 28px;
+          background: rgba(255, 122, 26, 0.14);
+          border: 1px solid rgba(255, 122, 26, 0.45);
+          border-radius: 9999px;
+          font-size: 18px;
+          font-weight: 700;
+          color: #ff7a1a;
+          letter-spacing: 0.08em;
+          box-shadow: 0 0 30px rgba(255, 122, 26, 0.2);
+        }
+
+        .url-dot {
+          width: 10px;
+          height: 10px;
+          border-radius: 50%;
+          background: #ff7a1a;
+          box-shadow: 0 0 14px #ff7a1a;
+        }
+      </style>
+
+      <div id="root" data-composition-id="c7-outro" data-width="1920" data-height="1080" data-hold>
+        <div id="outro-logo-wrap" class="logo-frame">
+          <img class="chog-logo-img" src="assets/media/chog-logo.jpg" alt="Chog Genesis Flame Logo" />
+        </div>
+        <h1 id="outro-title" class="title-main">CHOG SWARM</h1>
+        <div id="outro-sub" class="title-sub">BUILT FOR CHOGATHON 2026 • LIVE ON MONAD</div>
+        <div id="outro-pill" class="url-pill" data-layout-ignore>
+          <span class="url-dot"></span>
+          chog-swarm.vercel.app
+        </div>
+      </div>
+
+      <script>
+        const tl = gsap.timeline({ paused: true });
+
+        tl.fromTo(
+          "#outro-logo-wrap",
+          { scale: 0.7, opacity: 0, y: 25 },
+          { scale: 1.0, opacity: 1, y: 0, duration: 1.0, ease: "back.out(1.4)" },
+          0.0
+        );
+
+        tl.fromTo(
+          "#outro-title",
+          { opacity: 0, y: 15 },
+          { opacity: 1, y: 0, duration: 0.8, ease: "power2.out" },
+          0.3
+        );
+
+        tl.fromTo(
+          "#outro-sub",
+          { opacity: 0, y: 15 },
+          { opacity: 0.9, y: 0, duration: 0.7, ease: "power2.out" },
+          0.7
+        );
+
+        tl.fromTo(
+          "#outro-pill",
+          { opacity: 0, scale: 0.9 },
+          { opacity: 1, scale: 1.0, duration: 0.6, ease: "power2.out" },
+          1.2
+        );
+
+        window.__timelines["c7-outro"] = tl;
+        tl.seek(0);
+      </script>
+    </template>
+  </body>
+</html>

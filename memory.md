@@ -19,6 +19,20 @@ Chog Swarm is a premium-tier autonomous web game built for Chogathon 2026 (choga
 - **Styling**: Tailwind CSS / CSS Modules with custom Chog design tokens (dark graphite base, authentic Chog brand accents, warm neutrals, bespoke typography)
 
 ## 4. Current State
+- **STAGE 2 DEMO VIDEO FULL FILM ASSEMBLY & RENDER COMPLETED (VERIFIED 1080p 60FPS)**:
+  - **Full Production Film Rendered**: `assets/capture/chog-swarm-demo-film.mp4` (91.6 MB, 170.000s / 2m 50s, 10,200 frames @ 60 FPS, 1920x1080, stereo AAC audio).
+  - **Architecture**: Modular HyperFrames composition in `demo-video/` with 8 sub-compositions:
+    1. `c0-cold-open.html` (0:00–0:08): Cold open black title card, Flame Chog emblem, Monad Chain 143 badge, core hook ("The NFT is the driver, not the badge").
+    2. `c1-blocked-gate.html` (0:08–0:32): 3D tilted browser window, real non-holder wallet connection, immediate fail-closed gate block, spotlight ring on shortened address `0x973a...82F4` and MonadScan link.
+    3. `c2-auth-and-pick.html` (0:32–0:58): Step 01 marker, Creator Pass authentication, Chog selection modal with authentic WebP art (Rule A preserved), cursor glide to START RACE with glowing amber click ripple.
+    4. `c3-arena-simulation.html` (0:58–1:26): Step 02 marker, real-time autonomous circuit race, kinetic HUD multipliers, timeline scrubber advancing to celebration.
+    5. `c4-trait-lab.html` (1:26–1:54): Step 03 marker, Trait Lab counterfactual proof, live stat delta bars dynamically sliding (`Aggression +34%`, `Risk Buffer -15%`).
+    6. `c5-daily-gauntlet.html` (1:54–2:20): Step 04 marker, 24-hour global seed `#133742` simulation, server-side anti-cheat verification, and honest disclosure ("Creator passes excluded from public rank").
+    7. `c6-leaderboard.html` (2:20–2:40): Public leaderboard and `/demo` exhibition replay showcase, proving permissionless auditability.
+    8. `c7-outro.html` (2:40–2:50): Flame Chog logo with warm embers, live URL pill (`chog-swarm.vercel.app`), and Chogathon 2026 lockup.
+  - **Audio Scoring**: Multi-track procedural audio mix from `lib/halloween-audio.ts` with continuous 92 BPM D harmonic minor bed and synchronized SFX cues (flipper mechanical snaps, bumper collisions, drain impact thuds, jackpot chimes).
+  - **Quality Gates**: Passed `npx hyperframes check` with 0 errors, 0 warnings, 0 layout overflows, and 100% WCAG AA contrast compliance.
+
 - **STAGE 1 DEMO VIDEO DISCOVERY, REAL FOOTAGE CAPTURE & GATE 1 MOTION TEST COMPLETED**:
   - **Capture Environment**: Next.js production build (`npm run build` -> `npm start` on `http://localhost:3000`) verified with 0 console errors, 0 warnings, and zero Next.js dev badges across all routes.
   - **Asset Verification**: Real Chog logo (`assets/capture/chog-logo.jpg`) byte-exact to `public/frame1.jpg` (SHA-256: `916e2ee9c181a01db3f62e662bf3732d8acf94a8b69297192ead9714f47e35d1`). Rule A strictly preserved (no color tint, no blur, original aspect ratio).

@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>Chog Swarm: Full Demo Film</title>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background: #030206;
+      }
+      #root {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+      }
+    </style>
+  </head>
+  <body>
+    <div
+      id="root"
+      data-composition-id="main"
+      data-start="0"
+      data-duration="170"
+      data-width="1920"
+      data-height="1080"
+    >
+      <!-- Continuous 92 BPM Procedural Music Bed Loop (18s stems) -->
+      <audio id="bed-0" src="assets/media/music-bed.wav" data-start="0" data-duration="18"></audio>
+      <audio id="bed-1" src="assets/media/music-bed.wav" data-start="18" data-duration="18"></audio>
+      <audio id="bed-2" src="assets/media/music-bed.wav" data-start="36" data-duration="18"></audio>
+      <audio id="bed-3" src="assets/media/music-bed.wav" data-start="54" data-duration="18"></audio>
+      <audio id="bed-4" src="assets/media/music-bed.wav" data-start="72" data-duration="18"></audio>
+      <audio id="bed-5" src="assets/media/music-bed.wav" data-start="90" data-duration="18"></audio>
+      <audio id="bed-6" src="assets/media/music-bed.wav" data-start="108" data-duration="18"></audio>
+      <audio id="bed-7" src="assets/media/music-bed.wav" data-start="126" data-duration="18"></audio>
+      <audio id="bed-8" src="assets/media/music-bed.wav" data-start="144" data-duration="18"></audio>
+      <audio id="bed-9" src="assets/media/music-bed.wav" data-start="162" data-duration="8"></audio>
+
+      <!-- Procedural Sound Effect (SFX) Cues -->
+      <audio id="sfx-roll-0" src="assets/media/rollover.wav" data-start="1.4" data-duration="0.5"></audio>
+      <audio id="sfx-drain-1" src="assets/media/drain.wav" data-start="22.5" data-duration="1.0"></audio>
+      <audio id="sfx-roll-1" src="assets/media/rollover.wav" data-start="23.0" data-duration="0.5"></audio>
+      <audio id="sfx-flip-2" src="assets/media/flipper.wav" data-start="48.0" data-duration="0.2"></audio>
+      <audio id="sfx-roll-2" src="assets/media/rollover.wav" data-start="49.0" data-duration="0.5"></audio>
+      <audio id="sfx-bump-3a" src="assets/media/bumper.wav" data-start="63.0" data-duration="0.4"></audio>
+      <audio id="sfx-bump-3b" src="assets/media/bumper.wav" data-start="66.5" data-duration="0.4"></audio>
+      <audio id="sfx-bump-3c" src="assets/media/bumper.wav" data-start="71.0" data-duration="0.4"></audio>
+      <audio id="sfx-jack-3" src="assets/media/jackpot.wav" data-start="74.5" data-duration="1.2"></audio>
+      <audio id="sfx-roll-3" src="assets/media/rollover.wav" data-start="75.0" data-duration="0.5"></audio>
+      <audio id="sfx-tick-4a" src="assets/media/ui-tick.wav" data-start="95.0" data-duration="0.1"></audio>
+      <audio id="sfx-tick-4b" src="assets/media/ui-tick.wav" data-start="98.5" data-duration="0.1"></audio>
+      <audio id="sfx-roll-4" src="assets/media/rollover.wav" data-start="102.0" data-duration="0.5"></audio>
+      <audio id="sfx-roll-5" src="assets/media/rollover.wav" data-start="129.0" data-duration="0.5"></audio>
+      <audio id="sfx-roll-6" src="assets/media/rollover.wav" data-start="151.0" data-duration="0.5"></audio>
+      <audio id="sfx-roll-7" src="assets/media/rollover.wav" data-start="161.2" data-duration="0.5"></audio>
+
+      <!-- Sub-Composition 0: Cold Open (0s - 8s) -->
+      <div
+        id="c0-cold-open"
+        data-composition-id="c0-cold-open"
+        data-composition-src="compositions/c0-cold-open.html"
+        data-start="0"
+        data-duration="8"
+        data-track-index="0"
+        data-width="1920"
+        data-height="1080"
+      ></div>
+
+      <!-- Sub-Composition 1: Blocked Gate Flow (8s - 32s) -->
+      <div
+        id="c1-blocked-gate"
+        data-composition-id="c1-blocked-gate"
+        data-composition-src="compositions/c1-blocked-gate.html"
+        data-start="8"
+        data-duration="24"
+        data-track-index="1"
+        data-width="1920"
+        data-height="1080"
+      ></div>
+
+      <!-- Sub-Composition 2: Select Chog & Compile Policy (32s - 58s) -->
+      <div
+        id="c2-auth-and-pick"
+        data-composition-id="c2-auth-and-pick"
+        data-composition-src="compositions/c2-auth-and-pick.html"
+        data-start="32"
+        data-duration="26"
+        data-track-index="2"
+        data-width="1920"
+        data-height="1080"
+      ></div>
+
+      <!-- Sub-Composition 3: Deterministic Arena Simulation (58s - 86s) -->
+      <div
+        id="c3-arena-simulation"
+        data-composition-id="c3-arena-simulation"
+        data-composition-src="compositions/c3-arena-simulation.html"
+        data-start="58"
+        data-duration="28"
+        data-track-index="3"
+        data-width="1920"
+        data-height="1080"
+      ></div>
+
+      <!-- Sub-Composition 4: Trait Lab Counterfactual (86s - 114s) -->
+      <div
+        id="c4-trait-lab"
+        data-composition-id="c4-trait-lab"
+        data-composition-src="compositions/c4-trait-lab.html"
+        data-start="86"
+        data-duration="28"
+        data-track-index="4"
+        data-width="1920"
+        data-height="1080"
+      ></div>
+
+      <!-- Sub-Composition 5: Daily Gauntlet & Server Verification (114s - 140s) -->
+      <div
+        id="c5-daily-gauntlet"
+        data-composition-id="c5-daily-gauntlet"
+        data-composition-src="compositions/c5-daily-gauntlet.html"
+        data-start="114"
+        data-duration="26"
+        data-track-index="5"
+        data-width="1920"
+        data-height="1080"
+      ></div>
+
+      <!-- Sub-Composition 6: Leaderboard & Permissionless Replay (140s - 160s) -->
+      <div
+        id="c6-leaderboard"
+        data-composition-id="c6-leaderboard"
+        data-composition-src="compositions/c6-leaderboard.html"
+        data-start="140"
+        data-duration="20"
+        data-track-index="6"
+        data-width="1920"
+        data-height="1080"
+      ></div>
+
+      <!-- Sub-Composition 7: Outro & Call to Action (160s - 170s) -->
+      <div
+        id="c7-outro"
+        data-composition-id="c7-outro"
+        data-composition-src="compositions/c7-outro.html"
+        data-start="160"
+        data-duration="10"
+        data-track-index="7"
+        data-width="1920"
+        data-height="1080"
+      ></div>
+    </div>
+
+    <script>
+      const tl = gsap.timeline({ paused: true });
+      window.__timelines["main"] = tl;
+      tl.seek(0);
+    </script>
+  </body>
+</html>

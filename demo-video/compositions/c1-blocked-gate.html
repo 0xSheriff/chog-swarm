@@ -1,0 +1,290 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+  </head>
+  <body>
+    <template>
+      <style>
+        @font-face {
+          font-family: 'Pirata One';
+          src: url('assets/fonts/PirataOne-Regular.ttf') format('truetype');
+          font-weight: 400;
+          font-style: normal;
+        }
+
+        #root {
+          position: absolute;
+          inset: 0;
+          perspective: 1400px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: #030206;
+          color: #efe6d2;
+          font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+          overflow: hidden;
+        }
+
+        .bg-video-layer {
+          position: absolute;
+          inset: 0;
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          opacity: 0.28;
+          filter: saturate(1.1) brightness(0.65);
+          pointer-events: none;
+        }
+
+        .stage-vignette {
+          position: absolute;
+          inset: 0;
+          background: radial-gradient(circle at center, transparent 35%, #030206 90%);
+          pointer-events: none;
+        }
+
+        .browser-viewport-wrapper {
+          position: relative;
+          width: 1400px;
+          height: 840px;
+          transform-style: preserve-3d;
+        }
+
+        .browser-window {
+          position: absolute;
+          inset: 0;
+          border-radius: 16px;
+          background: rgba(10, 7, 18, 0.95);
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          box-shadow: 0 45px 120px rgba(0, 0, 0, 0.9), 0 0 60px rgba(255, 122, 26, 0.12);
+          overflow: hidden;
+          display: flex;
+          flex-direction: column;
+        }
+
+        .browser-chrome-bar {
+          height: 48px;
+          background: rgba(20, 15, 32, 0.95);
+          border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+          display: flex;
+          align-items: center;
+          padding: 0 18px;
+          gap: 16px;
+        }
+
+        .traffic-lights {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+
+        .traffic-dot {
+          width: 12px;
+          height: 12px;
+          border-radius: 50%;
+        }
+        .dot-red { background: #ff5f56; }
+        .dot-yellow { background: #ffbd2e; }
+        .dot-green { background: #27c93f; }
+
+        .url-bar {
+          flex: 1;
+          max-width: 480px;
+          height: 28px;
+          background: rgba(0, 0, 0, 0.4);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          border-radius: 6px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 12px;
+          color: rgba(239, 230, 210, 0.6);
+          font-family: monospace;
+          letter-spacing: 0.02em;
+        }
+
+        .browser-content {
+          flex: 1;
+          position: relative;
+          background: #0a0712;
+          overflow: hidden;
+        }
+
+        .real-footage-video {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          display: block;
+        }
+
+        .spotlight-ring {
+          position: absolute;
+          top: 360px;
+          left: 540px;
+          width: 320px;
+          height: 120px;
+          border: 2px solid #ff7a1a;
+          border-radius: 14px;
+          box-shadow: 0 0 35px rgba(255, 122, 26, 0.6), inset 0 0 20px rgba(255, 122, 26, 0.2);
+          pointer-events: none;
+          opacity: 0;
+        }
+
+        .overlay-card {
+          position: absolute;
+          bottom: 70px;
+          right: 80px;
+          max-width: 540px;
+          padding: 24px 32px;
+          background: rgba(10, 7, 18, 0.92);
+          backdrop-filter: blur(20px);
+          border: 1px solid rgba(255, 122, 26, 0.35);
+          border-radius: 16px;
+          box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 30px rgba(255, 122, 26, 0.2);
+          z-index: 25;
+          opacity: 0;
+        }
+
+        .card-tag {
+          font-size: 12px;
+          font-weight: 700;
+          letter-spacing: 0.16em;
+          text-transform: uppercase;
+          color: #ff7a1a;
+          margin-bottom: 8px;
+          display: flex;
+          align-items: center;
+          gap: 6px;
+        }
+
+        .card-tag::before {
+          content: '';
+          width: 6px;
+          height: 6px;
+          border-radius: 50%;
+          background: #ff7a1a;
+        }
+
+        .card-title {
+          font-family: 'Pirata One', cursive;
+          font-size: 42px;
+          line-height: 1.05;
+          color: #efe6d2;
+          margin-bottom: 8px;
+        }
+
+        .card-body {
+          font-size: 16px;
+          line-height: 1.5;
+          color: rgba(239, 230, 210, 0.75);
+        }
+      </style>
+
+      <div id="root" data-composition-id="c1-blocked-gate" data-width="1920" data-height="1080">
+        <video
+          id="c1-bg-loop"
+          class="bg-video-layer"
+          src="assets/media/halloween-background-loop.mp4"
+          data-start="0"
+          data-duration="24"
+          muted
+          playsinline
+        ></video>
+        <div class="stage-vignette"></div>
+
+        <div id="c1-browser" class="browser-viewport-wrapper" data-layout-allow-overflow>
+          <div class="browser-window">
+            <div class="browser-chrome-bar">
+              <div class="traffic-lights">
+                <span class="traffic-dot dot-red"></span>
+                <span class="traffic-dot dot-yellow"></span>
+                <span class="traffic-dot dot-green"></span>
+              </div>
+              <div class="url-bar" data-layout-ignore data-layout-allow-overflow>https://chog-swarm.vercel.app/arena</div>
+            </div>
+            <div class="browser-content">
+              <video
+                id="c1-footage"
+                class="real-footage-video"
+                src="assets/media/scene1-nft-essential-blocked.mp4"
+                data-start="0"
+                data-duration="24"
+                muted
+                playsinline
+              ></video>
+              <div id="c1-ring" class="spotlight-ring"></div>
+            </div>
+          </div>
+        </div>
+
+        <div id="c1-card" class="overlay-card">
+          <div class="card-tag" data-layout-ignore>Core Judging Test</div>
+          <div class="card-title">THE NFT IS ESSENTIAL</div>
+          <div class="card-body" data-layout-ignore>
+            Take the NFT out: does it work? No.<br />
+            Fail-closed on-chain gate verified on Monad Chain 143.
+          </div>
+        </div>
+      </div>
+
+      <script>
+        const tl = gsap.timeline({ paused: true });
+
+        // Tilted browser entrance
+        tl.fromTo(
+          "#c1-browser",
+          { rotateX: 12, rotateY: -16, rotateZ: 2, scale: 0.88, opacity: 0 },
+          { rotateX: 7, rotateY: -9, rotateZ: 1, scale: 0.96, opacity: 1, duration: 1.4, ease: "power3.out" },
+          0.0
+        );
+
+        // Slow camera drift while cursor moves
+        tl.to(
+          "#c1-browser",
+          { rotateX: 4, rotateY: -5, rotateZ: 0.5, scale: 1.0, duration: 12.0, ease: "sine.inOut" },
+          1.4
+        );
+
+        // Dynamic push-in on blocked screen at 13.5s
+        tl.to(
+          "#c1-browser",
+          { rotateX: 0, rotateY: 0, rotateZ: 0, scale: 1.35, x: -140, y: -70, duration: 1.4, ease: "power3.inOut" },
+          13.5
+        );
+
+        // Spotlight ring reveal
+        tl.fromTo(
+          "#c1-ring",
+          { scale: 1.4, opacity: 0 },
+          { scale: 1.0, opacity: 1, duration: 0.6, ease: "back.out(1.8)" },
+          15.0
+        );
+
+        tl.to(
+          "#c1-ring",
+          { boxShadow: "0 0 55px rgba(255, 122, 26, 0.9), inset 0 0 30px rgba(255, 122, 26, 0.4)", repeat: 3, yoyo: true, duration: 0.6 },
+          15.6
+        );
+
+        // Headline card reveal
+        tl.fromTo(
+          "#c1-card",
+          { x: 60, opacity: 0 },
+          { x: 0, opacity: 1, duration: 0.8, ease: "power3.out" },
+          14.2
+        );
+
+        // Fade out before next scene
+        tl.to(
+          "#c1-browser, #c1-card",
+          { opacity: 0, scale: 0.95, duration: 0.6, ease: "power2.in" },
+          23.4
+        );
+
+        window.__timelines["c1-blocked-gate"] = tl;
+        tl.seek(0);
+      </script>
+    </template>
+  </body>
+</html>

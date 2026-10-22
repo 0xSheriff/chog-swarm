@@ -38,5 +38,7 @@ coverage/
 assets/capture/*.mp4
 motion-test/assets/media/*.mp4
 motion-test/.hyperframes/
+demo-video/assets/media/*.mp4
+demo-video/.hyperframes/
 .tmp_video_rec/
 .ref_frames/
