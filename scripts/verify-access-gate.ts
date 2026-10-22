@@ -184,7 +184,7 @@ async function runAcceptanceChecks() {
 
     const buyLink = await page3.locator('a[href*="monadscan.com/token/0xc96d31F8626c6D03Fae5dCD3d61e3FB9F4a73763"]').count();
     const demoLink = await page3.locator('a[href="/demo"]').count();
-    const connectOrSwitchBtn = await page3.locator('button:has-text("Connect Monad Wallet"), button:has-text("Switch Wallet")').count();
+    const connectOrSwitchBtn = await page3.locator('button:has-text("Connect Monad Wallet"), button:has-text("Switch Account"), button:has-text("Switch Wallet")').count();
 
     const pass3 = is403Blocked && buyLink > 0 && demoLink > 0 && connectOrSwitchBtn > 0;
     await page3.screenshot({ path: 'public/screenshots/check3-non-holder-blocked.png' });
@@ -201,8 +201,8 @@ async function runAcceptanceChecks() {
     // Check 4: Address in OWNER_ALLOWLIST passes without owning a Chog and gets creator pass banner
     // -------------------------------------------------------------
     console.log('\n[Check 4] Verifying OWNER_ALLOWLIST creator pass...');
-    // Address in OWNER_ALLOWLIST (from .env.local: 0x1111111111111111111111111111111111111111)
-    const allowlistedAddress = '0x1111111111111111111111111111111111111111';
+    // Address in OWNER_ALLOWLIST (from .env.local)
+    const allowlistedAddress = process.env.OWNER_ALLOWLIST?.split(',')[0]?.trim().toLowerCase() || '0x0533cda710e375b00d106e557da995b859e5bf94';
     const creatorSessionPayload = {
       address: allowlistedAddress,
       isHolder: false,
@@ -247,10 +247,11 @@ async function runAcceptanceChecks() {
     // Check 5: Judge code enters successfully and gets judge pass banner
     // -------------------------------------------------------------
     console.log('\n[Check 5] Verifying Judge code authentication and banner...');
+    const judgeCodeToUse = process.env.JUDGE_CODE || 'CHOGATHON_2026_JUDGE';
     const judgeRes = await fetch(`${BASE_URL}/api/auth/judge`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ code: 'CHOGATHON_2026_JUDGE', selectedChogId: 143 }),
+      body: JSON.stringify({ code: judgeCodeToUse, selectedChogId: 143 }),
     });
     const judgeData = await judgeRes.json();
     const judgeCookieHeader = judgeRes.headers.get('set-cookie') || '';

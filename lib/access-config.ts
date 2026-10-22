@@ -11,6 +11,7 @@
 
 export const PUBLIC_REPLAY = process.env.PUBLIC_REPLAY !== 'false';
 export const PUBLIC_LEADERBOARD_READ = process.env.PUBLIC_LEADERBOARD_READ !== 'false';
+export const SESSION_COOKIE_NAME = 'chog_session';
 
 /**
  * Returns parsed lowercase allowlist from OWNER_ALLOWLIST env var.

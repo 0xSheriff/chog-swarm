@@ -24,6 +24,7 @@ export function AccessBlocked({ customTitle, customMessage }: AccessBlockedProps
     needsSignature,
     signAndVerify,
     enterJudgeCode,
+    logout,
   } = useAccessSession();
 
   const [judgeCodeInput, setJudgeCodeInput] = useState('');
@@ -42,6 +43,28 @@ export function AccessBlocked({ customTitle, customMessage }: AccessBlockedProps
     } finally {
       setIsSigning(false);
     }
+  };
+
+  const handleSwitchAccount = async () => {
+    try {
+      if (typeof window !== 'undefined' && (window as any).ethereum?.request) {
+        await (window as any).ethereum.request({
+          method: 'wallet_requestPermissions',
+          params: [{ eth_accounts: {} }],
+        });
+        return;
+      }
+    } catch (err: any) {
+      console.log('Permission request cancelled or not supported:', err);
+    }
+    // Fallback: disconnect and logout
+    disconnect();
+    await logout();
+  };
+
+  const handleDisconnect = async () => {
+    disconnect();
+    await logout();
   };
 
   const handleJudgeSubmit = async (e: React.FormEvent) => {
@@ -90,6 +113,9 @@ export function AccessBlocked({ customTitle, customMessage }: AccessBlockedProps
               </span>
               <p className="text-red-400 font-medium">
                 {customMessage || blockReason || 'This wallet holds no Chog'}
+              </p>
+              <p className="text-xs text-stone-400 max-w-sm mt-1">
+                To switch accounts, click <strong className="text-stone-300">Switch Account</strong> below or change the active account directly in your wallet extension (MetaMask/Rabby).
               </p>
             </div>
           ) : (
@@ -142,14 +168,14 @@ export function AccessBlocked({ customTitle, customMessage }: AccessBlockedProps
                     ) : (
                       <div className="flex gap-2">
                         <button
-                          onClick={openAccountModal}
+                          onClick={handleSwitchAccount}
                           type="button"
                           className="flex-1 py-2.5 px-4 rounded-xl bg-stone-900 hover:bg-stone-800 border border-stone-700 text-stone-200 text-sm font-semibold transition-all flex items-center justify-center gap-2 cursor-pointer"
                         >
-                          Switch Wallet
+                          Switch Account
                         </button>
                         <button
-                          onClick={() => disconnect()}
+                          onClick={handleDisconnect}
                           type="button"
                           className="py-2.5 px-4 rounded-xl bg-stone-900/60 hover:bg-red-950/40 border border-stone-800 hover:border-red-500/50 text-stone-400 hover:text-red-300 text-sm transition-all cursor-pointer"
                         >

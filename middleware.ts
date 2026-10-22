@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { isPublicPath } from '@/lib/access-config';
-import { SESSION_COOKIE_NAME } from '@/lib/auth-session';
+import { isPublicPath, SESSION_COOKIE_NAME } from '@/lib/access-config';
 
 export function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
