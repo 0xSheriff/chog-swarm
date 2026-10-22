@@ -57,15 +57,15 @@ export default function DemoPage() {
 
   return (
     <div className="flex flex-col gap-6 py-4">
-      {/* Demo Safety Banner */}
-      <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-start gap-3 text-amber-200">
-        <ShieldAlert className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
+      {/* Exhibition Showcase Banner */}
+      <div className="p-4 rounded-2xl bg-pumpkin/10 border border-pumpkin/30 flex items-start gap-3 text-bone">
+        <Play className="w-5 h-5 text-pumpkin fill-pumpkin flex-shrink-0 mt-0.5" />
         <div>
-          <span className="font-bold font-mono block text-sm text-amber-300">
-            DEMO SAFETY: RECORDED FALLBACK REPLAY (OFFLINE MODE)
+          <span className="font-bold font-mono block text-sm text-pumpkin">
+            EXHIBITION MATCH • ARCHIVED SIMULATION
           </span>
-          <p className="text-xs font-mono opacity-90 mt-0.5">
-            This mode uses cached local fixtures and deterministic engine execution for hackathon evaluation in environments where browser wallets or live RPC endpoints are unavailable. Per strict hackathon rules, this fallback is never presented as live on-chain verification.
+          <p className="text-xs font-mono text-bone/80 mt-0.5 leading-relaxed">
+            Public demonstration mode: Watch a complete 30-turn tactical race between Chog #143 and Chog #24 with full turn-by-turn AI policy reasoning. No wallet or token required.
           </p>
         </div>
       </div>

@@ -7,6 +7,7 @@ import { verifyChogOwnershipOnChain } from '@/lib/monad-chain';
 import fixturesManifest from '@/fixtures/manifest.json';
 import { ChogImage } from '@/components/chog-image';
 import { Search, Shield, AlertTriangle, CheckCircle, X, Sparkles, Wallet, RefreshCw } from 'lucide-react';
+import { useAccessSession } from '@/components/access-context';
 
 interface ChogSelectModalProps {
   isOpen: boolean;
@@ -21,6 +22,7 @@ export function ChogSelectModal({
   onSelect,
   userAddress,
 }: ChogSelectModalProps) {
+  const { session } = useAccessSession();
   const [search, setSearch] = useState<string>('');
   const [selectedTokenId, setSelectedTokenId] = useState<number>(143);
   const [isVerifying, setIsVerifying] = useState<boolean>(false);
@@ -92,19 +94,16 @@ export function ChogSelectModal({
     setIsVerifying(true);
     setSelectedTokenId(chog.tokenId);
 
-    // Check if disconnect test is simulated
-    const isDisconnectTest =
-      typeof window !== 'undefined' &&
-      localStorage.getItem('chog_disconnect_test') === 'true';
-
-    if (isDisconnectTest) {
-      setVerificationResult({
-        verified: false,
-        owner: '0x0000000000000000000000000000000000000000',
-        error:
-          'Disconnect Test Active: NFT ownership detached. Spawning rejected.',
-      });
+    // Pass verification if user holds creator or judge session pass
+    if (session?.creatorPass || session?.judgePass) {
+      const verifiedResult = {
+        verified: true,
+        owner: userAddress || 'Access Pass Holder',
+      };
+      setVerificationResult(verifiedResult);
       setIsVerifying(false);
+      const policy = compilePolicy(chog);
+      onSelect(chog, policy, true);
       return;
     }
 

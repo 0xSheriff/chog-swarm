@@ -13,7 +13,7 @@ import { runFullMatch } from '@engine/engine';
 import { buildRaceTrack } from '@engine/race-engine';
 import { verifyChogOwnershipOnChain } from '@/lib/monad-chain';
 import fixturesManifest from '@/fixtures/manifest.json';
-import { Zap, Shield, Share2, Play, AlertCircle, RefreshCw, Trophy, Users, Target, Info, Flame, Gauge } from 'lucide-react';
+import { Zap, Shield, Share2, Play, RefreshCw, Trophy, Users, Target, Info, Flame, Gauge } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { ChogImage } from '@/components/chog-image';
 import { ArenaLegend } from '@/components/arena-legend';
@@ -77,7 +77,6 @@ function ArenaContent() {
   const [rivals, setRivals] = useState<{ chog: ChogNFT; policy: CompiledPolicy }[]>(defaultRivalsData);
 
   const [isOwnerVerified, setIsOwnerVerified] = useState<boolean>(false);
-  const [isDisconnectedTest, setIsDisconnectedTest] = useState<boolean>(false);
   const [verificationError, setVerificationError] = useState<string | null>(null);
 
   const [replay, setReplay] = useState<ReplaySnapshot | null>(null);
@@ -105,18 +104,9 @@ function ArenaContent() {
     setCompiledPolicy(compilePolicy(chogData));
   }, [searchParams]);
 
-  // Check ownership and listen to disconnect test toggle
+  // Check ownership
   useEffect(() => {
     const checkState = async () => {
-      const isMockDisconnected = localStorage.getItem('chog_disconnect_test') === 'true';
-      setIsDisconnectedTest(isMockDisconnected);
-
-      if (isMockDisconnected) {
-        setIsOwnerVerified(false);
-        setVerificationError('Disconnect Test Active: NFT ownership detached. Spawning rejected.');
-        return;
-      }
-
       if (session?.creatorPass || session?.judgePass) {
         setIsOwnerVerified(true);
         setVerificationError(null);
@@ -131,13 +121,11 @@ function ArenaContent() {
     };
 
     checkState();
-    window.addEventListener('chog_disconnect_test_changed', checkState);
-    return () => window.removeEventListener('chog_disconnect_test_changed', checkState);
-  }, [address, selectedChog]);
+  }, [address, selectedChog, session]);
 
   // Auto-run match on initial load so the first impression is motion
   useEffect(() => {
-    if (!hasAutoRun && selectedChog && compiledPolicy && rivals.length >= 3 && !isDisconnectedTest) {
+    if (!hasAutoRun && selectedChog && compiledPolicy && rivals.length >= 3) {
       setHasAutoRun(true);
       const seed = Math.floor(Math.random() * 900000) + 100000;
       setMatchSeed(seed);
@@ -165,14 +153,9 @@ function ArenaContent() {
       setReplay(res);
       setCurrentTurnIndex(0);
     }
-  }, [hasAutoRun, selectedChog, compiledPolicy, rivals, isDisconnectedTest, isRaceV1]);
+  }, [hasAutoRun, selectedChog, compiledPolicy, rivals, isRaceV1]);
 
   const handleSpawnAndRunMatch = async () => {
-    if (isDisconnectedTest) {
-      alert('Spawn Rejected: Disconnect test is active. The Chog NFT is strictly essential to spawn.');
-      return;
-    }
-
     if (!selectedChog || !compiledPolicy || rivals.length < 1) return;
 
     const seed = Math.floor(Math.random() * 900000) + 100000;
@@ -425,39 +408,15 @@ function ArenaContent() {
             {isCopied ? 'Link Copied!' : 'Share Replay'}
           </button>
 
-          {isDisconnectedTest ? (
-            <button
-              disabled
-              className="px-5 py-2 rounded-xl bg-red-950/60 border border-red-500/50 text-red-300 font-koulen text-lg tracking-wider cursor-not-allowed opacity-75"
-            >
-              SPAWN BLOCKED
-            </button>
-          ) : (
-            <button
-              onClick={handleSpawnAndRunMatch}
-              className="px-5 py-2 rounded-xl bg-gradient-to-r from-chog-purple to-chog-purpleSoft hover:from-chog-purple text-white font-koulen text-lg tracking-wider flex items-center gap-2 shadow-lg shadow-chog-purple/25 transition-all transform hover:-translate-y-0.5 cursor-pointer"
-            >
-              <Zap className="w-4 h-4 fill-white" />
-              START RACE
-            </button>
-          )}
+          <button
+            onClick={handleSpawnAndRunMatch}
+            className="px-5 py-2 rounded-xl bg-gradient-to-r from-chog-purple to-chog-purpleSoft hover:from-chog-purple text-white font-koulen text-lg tracking-wider flex items-center gap-2 shadow-lg shadow-chog-purple/25 transition-all transform hover:-translate-y-0.5 cursor-pointer"
+          >
+            <Zap className="w-4 h-4 fill-white" />
+            START RACE
+          </button>
         </div>
       </div>
-
-      {/* Disconnect Test Hard Banner if active */}
-      {isDisconnectedTest && (
-        <div className="p-4 rounded-2xl bg-red-950/60 border-2 border-red-500 flex items-start gap-3 shadow-lg shadow-red-950/30 animate-in fade-in">
-          <AlertCircle className="w-6 h-6 text-red-400 flex-shrink-0 mt-0.5" />
-          <div>
-            <h4 className="font-koulen text-xl text-red-200 tracking-wide">
-              NFT ESSENTIALITY DISCONNECT TEST: SPAWN REJECTED
-            </h4>
-            <p className="text-xs font-mono text-red-300 mt-1">
-              The Chog Genesis NFT ownership check was artificially disconnected via the top control. In accordance with Chogathon judging criteria, an agent cannot spawn without verified on-chain ownership. Toggle the "Disconnect Test" in the header to resume.
-            </p>
-          </div>
-        </div>
-      )}
 
       {/* Match Result Banner when completed */}
       {replay && replay.stateHistory[currentTurnIndex]?.completed && (
@@ -598,7 +557,6 @@ function ArenaContent() {
               chog={selectedChog}
               policy={compiledPolicy}
               isOwnerVerified={isOwnerVerified}
-              isDisconnectedTest={isDisconnectedTest}
             />
           )}
 

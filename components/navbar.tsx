@@ -16,7 +16,6 @@ export function Navbar() {
   const { switchChain } = useSwitchChain();
 
   const [chogBal, setChogBal] = useState<string>('0');
-  const [disconnectTestActive, setDisconnectTestActive] = useState<boolean>(false);
 
   const isWrongNetwork = isConnected && chainId !== 143;
 
@@ -28,26 +27,13 @@ export function Navbar() {
     }
   }, [address, isConnected]);
 
-  // Sync disconnect test state via localStorage for consistency
-  useEffect(() => {
-    const isMockDisconnected = localStorage.getItem('chog_disconnect_test') === 'true';
-    setDisconnectTestActive(isMockDisconnected);
-  }, []);
-
-  const toggleDisconnectTest = () => {
-    const nextVal = !disconnectTestActive;
-    setDisconnectTestActive(nextVal);
-    localStorage.setItem('chog_disconnect_test', String(nextVal));
-    window.dispatchEvent(new Event('chog_disconnect_test_changed'));
-  };
-
   const navLinks = [
     { href: '/', label: 'Overview' },
     { href: '/arena', label: 'Arena' },
     { href: '/lab', label: 'Trait Lab' },
     { href: '/gauntlet', label: 'Daily Gauntlet' },
     { href: '/leaderboard', label: 'Leaderboard' },
-    { href: '/demo', label: 'Recorded Fallback' },
+    { href: '/demo', label: 'Exhibition Replay' },
   ];
 
   return (
@@ -113,23 +99,6 @@ export function Navbar() {
 
           {/* Wallet & Controls */}
           <div className="flex items-center gap-2.5">
-            {/* Disconnect Test Switch */}
-            <button
-              onClick={toggleDisconnectTest}
-              title="Toggle Disconnect Test to simulate missing NFT ownership"
-              className={`px-2.5 py-1 rounded-lg text-[11px] font-mono border flex items-center gap-1.5 transition-colors ${
-                disconnectTestActive
-                  ? 'bg-red-950/60 border-red-500/50 text-red-300 animate-pulse'
-                  : 'bg-chog-surface1 border-chog-line text-chog-muted hover:text-white hover:border-chog-lineBright'
-              }`}
-            >
-              <Shield className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Disconnect Test:</span>
-              <span className={disconnectTestActive ? 'font-bold text-red-400' : 'text-green-400 font-medium'}>
-                {disconnectTestActive ? 'NFT DISCONNECTED' : 'NORMAL'}
-              </span>
-            </button>
-
             {/* $CHOG token balance pill */}
             {isConnected && Number(chogBal.replace(/,/g, '')) > 0 && (
               <div className="hidden lg:flex items-center gap-1.5 px-3 py-1 bg-chog-surface2 border border-chog-gold/40 rounded-full text-xs font-mono text-chog-gold">

@@ -160,8 +160,8 @@ export default function TraitLabPage() {
             <h1 className="font-pirata text-4xl text-bone tracking-wide">
               TRAIT <span className="text-pumpkin">LAB</span>
             </h1>
-            <span className="px-2.5 py-0.5 rounded text-xs font-sans bg-pumpkin/20 text-pumpkin border border-pumpkin/30 font-bold">
-              NOVELTY 30%
+            <span className="px-2.5 py-0.5 rounded text-xs font-sans bg-chog-diverge/20 text-chog-diverge border border-chog-diverge/30 font-bold uppercase tracking-wider">
+              Counterfactual Sandbox
             </span>
           </div>
           <p className="text-xs text-chog-muted mt-0.5">

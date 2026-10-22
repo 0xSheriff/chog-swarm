@@ -180,7 +180,8 @@ async function runAcceptanceChecks() {
     // Check UI links on blocked screen
     const context3 = await browser.newContext();
     const page3 = await context3.newPage();
-    await page3.goto(`${BASE_URL}/arena`, { waitUntil: 'networkidle' });
+    await page3.goto(`${BASE_URL}/arena`, { waitUntil: 'domcontentloaded' });
+    await page3.waitForSelector('[data-testid="access-blocked-screen"]', { timeout: 10000 });
 
     const buyLink = await page3.locator('a[href*="monadscan.com/token/0xc96d31F8626c6D03Fae5dCD3d61e3FB9F4a73763"]').count();
     const demoLink = await page3.locator('a[href="/demo"]').count();

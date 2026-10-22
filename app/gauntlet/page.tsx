@@ -31,7 +31,6 @@ export default function DailyGauntletPage() {
   const [isSelectModalOpen, setIsSelectModalOpen] = useState(false);
 
   const [isOwnerVerified, setIsOwnerVerified] = useState<boolean>(false);
-  const [isDisconnectedTest, setIsDisconnectedTest] = useState<boolean>(false);
 
   const [replay, setReplay] = useState<ReplaySnapshot | null>(null);
   const [currentTurnIndex, setCurrentTurnIndex] = useState<number>(0);
@@ -69,16 +68,8 @@ export default function DailyGauntletPage() {
     setCompiledPolicy(compilePolicy(chogData));
   }, []);
 
-  // Ownership & Disconnect check
+  // Ownership & session check
   useEffect(() => {
-    const isMockDisconnected = localStorage.getItem('chog_disconnect_test') === 'true';
-    setIsDisconnectedTest(isMockDisconnected);
-
-    if (isMockDisconnected) {
-      setIsOwnerVerified(false);
-      return;
-    }
-
     if (session?.creatorPass || session?.judgePass) {
       setIsOwnerVerified(true);
       return;
@@ -89,14 +80,9 @@ export default function DailyGauntletPage() {
         setIsOwnerVerified(res.verified);
       });
     }
-  }, [address, selectedChog]);
+  }, [address, selectedChog, session]);
 
   const handleRunGauntlet = () => {
-    if (isDisconnectedTest) {
-      alert('Spawn Rejected: Disconnect test is active. Chog NFT ownership required.');
-      return;
-    }
-
     if (!selectedChog || !compiledPolicy) return;
 
     const rivals = getStandardRaceOpponents();
@@ -238,8 +224,8 @@ export default function DailyGauntletPage() {
             <h1 className="font-pirata text-4xl text-bone tracking-wide">
               DAILY <span className="text-pumpkin">GAUNTLET</span>
             </h1>
-            <span className="px-2.5 py-0.5 rounded text-xs font-sans bg-pumpkin/20 text-pumpkin border border-pumpkin/30 font-bold">
-              RETENTION 20%
+            <span className="px-2.5 py-0.5 rounded text-xs font-sans bg-ember/20 text-ember border border-ember/30 font-bold uppercase tracking-wider">
+              GLOBAL CHALLENGE
             </span>
           </div>
           <p className="text-xs text-chog-muted mt-0.5">
@@ -256,39 +242,15 @@ export default function DailyGauntletPage() {
             Change Chog
           </button>
 
-          {isDisconnectedTest ? (
-            <button
-              disabled
-              className="px-5 py-2 rounded-xl bg-red-950/60 border border-red-500/50 text-red-300 font-koulen text-lg tracking-wider opacity-75 cursor-not-allowed"
-            >
-              SPAWN BLOCKED
-            </button>
-          ) : (
-            <button
-              onClick={handleRunGauntlet}
-              className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-chog-gold to-amber-500 hover:from-chog-gold text-chog-base font-koulen text-lg tracking-wider flex items-center gap-2 shadow-lg shadow-chog-gold/25 transition-all transform hover:-translate-y-0.5 font-bold cursor-pointer"
-            >
-              <Zap className="w-4 h-4 fill-chog-base" />
-              RUN DAILY SEED
-            </button>
-          )}
+          <button
+            onClick={handleRunGauntlet}
+            className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-chog-gold to-amber-500 hover:from-chog-gold text-chog-base font-koulen text-lg tracking-wider flex items-center gap-2 shadow-lg shadow-chog-gold/25 transition-all transform hover:-translate-y-0.5 font-bold cursor-pointer"
+          >
+            <Zap className="w-4 h-4 fill-chog-base" />
+            RUN DAILY SEED
+          </button>
         </div>
       </div>
-
-      {/* Disconnect Test Hard Banner if active */}
-      {isDisconnectedTest && (
-        <div className="p-4 rounded-2xl bg-red-950/60 border-2 border-red-500 flex items-start gap-3 shadow-lg shadow-red-950/30">
-          <AlertTriangle className="w-6 h-6 text-red-400 flex-shrink-0 mt-0.5" />
-          <div>
-            <h4 className="font-koulen text-xl text-red-200 tracking-wide">
-              NFT ESSENTIALITY DISCONNECT TEST: SPAWN REJECTED
-            </h4>
-            <p className="text-xs font-mono text-red-300 mt-1">
-              Gauntlet score submissions require verified on-chain ownership. Toggle the "Disconnect Test" in the header to re-enable live submission testing.
-            </p>
-          </div>
-        </div>
-      )}
 
       {/* Gauntlet Submission Banner */}
       {replay && replay.stateHistory[currentTurnIndex]?.completed && (

@@ -2,19 +2,20 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { useAccount, useConnect } from 'wagmi';
-import { injected } from 'wagmi/connectors';
+import { useAccount } from 'wagmi';
+import { useConnectModal } from '@rainbow-me/rainbowkit';
 import { Shield, Zap, Sparkles, Play, Award, Compass, Cpu, CheckCircle2, AlertTriangle, ArrowRight } from 'lucide-react';
 import fixturesManifest from '@/fixtures/manifest.json';
 import { ChogSelectModal } from '@/components/chog-select-modal';
 import { ChogNFT, CompiledPolicy } from '@engine/types';
+import { compilePolicy } from '@engine/compiler';
 import { useRouter } from 'next/navigation';
 import { ChogImage } from '@/components/chog-image';
 import { LandingHeroPortraits } from '@/components/landing-hero-portraits';
 
 export default function LandingPage() {
   const { address, isConnected } = useAccount();
-  const { connect } = useConnect();
+  const { openConnectModal } = useConnectModal();
   const router = useRouter();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -61,7 +62,7 @@ export default function LandingPage() {
             </button>
           ) : (
             <button
-              onClick={() => connect({ connector: injected() })}
+              onClick={() => (openConnectModal ? openConnectModal() : router.push('/arena'))}
               className="btn-gloss px-8 py-3.5 rounded-xl bg-gradient-to-r from-pumpkin to-ember hover:from-pumpkin hover:to-pumpkin text-void font-bold text-lg tracking-wider shadow-lg shadow-pumpkin/30 flex items-center gap-2.5 cursor-pointer"
             >
               <Zap className="w-5 h-5 fill-void" />
@@ -74,7 +75,7 @@ export default function LandingPage() {
             className="btn-gloss px-6 py-3.5 rounded-xl glass-panel hover:border-pumpkin/40 text-bone font-medium text-lg tracking-wider flex items-center gap-2"
           >
             <Play className="w-4 h-4 fill-bone" />
-            TRY RECORDED FALLBACK
+            WATCH EXHIBITION MATCH
           </Link>
         </div>
 
@@ -165,7 +166,7 @@ export default function LandingPage() {
         {/* Mode 2: Trait Lab */}
         <div className="glass-panel glass-sheen p-6 flex flex-col justify-between transition-all group relative overflow-hidden shadow-xl">
           <div className="absolute top-3.5 right-3.5 px-2.5 py-0.5 rounded bg-chog-diverge/20 border border-chog-diverge/40 text-xs font-bold text-chog-diverge">
-            NOVELTY 30%
+            SANDBOX
           </div>
           <div>
             <div className="w-12 h-12 rounded-xl bg-chog-diverge/20 text-chog-diverge flex items-center justify-center mb-4">
@@ -190,7 +191,7 @@ export default function LandingPage() {
         {/* Mode 3: Daily Gauntlet */}
         <div className="glass-panel glass-sheen p-6 flex flex-col justify-between transition-all group relative overflow-hidden shadow-xl">
           <div className="absolute top-3.5 right-3.5 px-2.5 py-0.5 rounded bg-ember/20 border border-ember/40 text-xs font-bold text-ember">
-            RETENTION 20%
+            DAILY CHALLENGE
           </div>
           <div>
             <div className="w-12 h-12 rounded-xl bg-ember/20 text-ember flex items-center justify-center mb-4">
@@ -231,7 +232,7 @@ export default function LandingPage() {
             onClick={() => setIsModalOpen(true)}
             className="btn-gloss px-4 py-2 rounded-xl bg-[#0a0712]/80 border border-bone/20 hover:border-pumpkin text-xs text-bone cursor-pointer font-medium"
           >
-            Browse All Fixtures
+            Explore Collection
           </button>
         </div>
 
@@ -247,7 +248,7 @@ export default function LandingPage() {
                   image: f.image,
                   attributes: f.traits
                 };
-                handleSelectChog(chog, {} as any, false);
+                handleSelectChog(chog, compilePolicy(chog), false);
               }}
               className="glass-panel glass-sheen p-3.5 flex flex-col gap-3 cursor-pointer group transition-all"
             >

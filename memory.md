@@ -19,6 +19,14 @@ Chog Swarm is a premium-tier autonomous web game built for Chogathon 2026 (choga
 - **Styling**: Tailwind CSS / CSS Modules with custom Chog design tokens (dark graphite base, authentic Chog brand accents, warm neutrals, bespoke typography)
 
 ## 4. Current State
+- **CONSUMER-READY POLISH & VIBE-CODED ELEMENT REMOVAL VERIFIED**:
+  - Eliminated all hackathon meta-rubric badges ("NOVELTY 30%", "RETENTION 20%") across the landing page, Trait Lab, and Daily Gauntlet, replacing with consumer badges ("SANDBOX", "COUNTERFACTUAL SANDBOX", "DAILY CHALLENGE", "GLOBAL CHALLENGE").
+  - Removed developer test toggles ("Disconnect Test") and intrusive warning banners from header navigation and gameplay pages.
+  - Replaced defensive "Recorded Fallback" labels and disclaimer text with polished "Exhibition Match • Archived Simulation" showcase styling.
+  - Replaced raw browser `window.alert()` popups with seamless in-app wallet selection via RainbowKit's `openConnectModal()`.
+  - Fixed broken state passing on landing page sample cards to compile authentic policies using `compilePolicy()`.
+  - Removed all mock flags from `components/chog-select-modal.tsx`, seamlessly linking `session.creatorPass` and `session.judgePass` for unrestricted authorized token selection.
+  - Passed full acceptance: 0 TypeScript errors (`tsc --noEmit`), 21/21 vitest tests, 1,969/1,969 NFT WebP assets intact, and 11/11 access gate security checks.
 - **CHOG HOLDER ACCESS GATE WITH CREATOR ALLOWLIST & JUDGE PASS VERIFIED (ALL CHECKS 1–11 PASS)**:
   - **Hard Gate Rule**: Access granted if wallet holds $\ge 1$ Chog Genesis NFT (`balanceOf > 0` on `0xc96d31F8626c6D03Fae5dCD3d61e3FB9F4a73763` on Monad Chain 143), OR address is in `OWNER_ALLOWLIST` (case-insensitive env var), OR authenticated via `JUDGE_CODE`.
   - **Server-Side SIWE Verification**: EIP-4361 proof-of-wallet signed message with domain, address, chain 143, single-use nonce, and 10-minute expiry. Verified with viem. Issues signed HMAC-SHA256 session cookie (`chog_session`) valid 12 hours (24 hours for Judge Pass).
@@ -33,6 +41,11 @@ Chog Swarm is a premium-tier autonomous web game built for Chogathon 2026 (choga
   - **Acceptance Deliverables**: All 11 checks verified via `scripts/verify-access-gate.ts`, evidence screenshots in `public/screenshots/check[1-5]-*.png`.
 
 ## 5. Recent Changes
+- Removed hackathon criteria meta-badges ("NOVELTY 30%", "RETENTION 20%") and replaced with consumer badges.
+- Removed developer "Disconnect Test" toggle and mock state from `components/navbar.tsx`, `app/arena/page.tsx`, `app/gauntlet/page.tsx`, `components/policy-inspector.tsx`, and `components/chog-select-modal.tsx`.
+- Refactored `/demo` showcase banner from defensive fallback disclaimer to "Exhibition Match • Archived Simulation".
+- Fixed landing page sample Chog selector to compile authentic policy rather than empty `{}`.
+- Replaced injected connector call on landing page with RainbowKit's `openConnectModal()`.
 - Built `lib/access-config.ts` for feature flags (`PUBLIC_REPLAY`, `PUBLIC_LEADERBOARD_READ`), allowlist parsing, and judge code validation.
 - Built `lib/auth-session.ts` for single-use nonces, EIP-4361 message parsing, on-chain holding checks with 15-minute cache, fail-closed handling, and HMAC session cookie signing.
 - Created auth API routes: `GET /api/auth/nonce`, `POST /api/auth/verify`, `GET /api/auth/session`, `POST /api/auth/logout`, `POST /api/auth/judge`, `POST /api/auth/select-chog`.
@@ -56,10 +69,10 @@ Chog Swarm is a premium-tier autonomous web game built for Chogathon 2026 (choga
 - None. All Checks 1–11 passed.
 
 ## 8. Current Task
-- Complete git commit and report deliverables to user.
+- Vibe-coded element cleanup complete; verified consumer flow and acceptance suites.
 
 ## 9. Next Steps
-- Await user review or subsequent feature requests.
+- Deliver final summary to user.
 
 ## 10. Important Files
 - `lib/access-config.ts`: Access rules and allowlist configuration.

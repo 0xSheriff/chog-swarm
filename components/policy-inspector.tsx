@@ -3,20 +3,18 @@
 import React from 'react';
 import { CompiledPolicy, ChogNFT } from '@engine/types';
 import { ChogImage } from '@/components/chog-image';
-import { Shield, Zap, Target, Users, Flame, Award, AlertTriangle, Compass } from 'lucide-react';
+import { Shield, Zap, Target, Users, Flame, Award, Compass } from 'lucide-react';
 
 interface PolicyInspectorProps {
   chog: ChogNFT;
   policy: CompiledPolicy;
   isOwnerVerified?: boolean;
-  isDisconnectedTest?: boolean;
 }
 
 export function PolicyInspector({
   chog,
   policy,
   isOwnerVerified = false,
-  isDisconnectedTest = false,
 }: PolicyInspectorProps) {
   return (
     <div className="bg-chog-card border border-chog-line rounded-2xl p-6 shadow-xl flex flex-col gap-6">
@@ -39,11 +37,7 @@ export function PolicyInspector({
               <h3 className="font-koulen text-3xl text-white tracking-wide truncate">
                 {chog.name}
               </h3>
-              {isDisconnectedTest ? (
-                <span className="px-2.5 py-1 rounded text-xs font-sans font-semibold bg-red-500/20 text-red-300 border border-red-500/40 animate-pulse">
-                  SPAWN REJECTED
-                </span>
-              ) : isOwnerVerified ? (
+              {isOwnerVerified ? (
                 <span className="px-2.5 py-1 rounded text-xs font-sans font-semibold bg-green-500/20 text-green-300 border border-green-500/40 flex items-center gap-1.5">
                   <Shield className="w-3.5 h-3.5" /> VERIFIED OWNER
                 </span>
@@ -93,16 +87,6 @@ export function PolicyInspector({
         </div>
       </div>
 
-      {/* Disconnect Test Warning Callout */}
-      {isDisconnectedTest && (
-        <div className="p-4 rounded-xl bg-red-950/40 border border-red-500/50 flex items-start gap-3 text-sm text-red-200">
-          <AlertTriangle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
-          <div>
-            <span className="font-bold text-red-300 block">NFT Essentiality Disconnect Test Active</span>
-            The NFT ownership verification was manually detached. In accordance with Chogathon rules, this agent cannot spawn in arena matches without verified on-chain ownership.
-          </div>
-        </div>
-      )}
 
       {/* Trait Breakdown Cards with Explicit Tradeoffs */}
       <div className="space-y-3">
