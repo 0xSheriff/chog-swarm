@@ -17,16 +17,44 @@
           position: absolute;
           inset: 0;
           display: flex;
-          flex-direction: column;
           align-items: center;
           justify-content: center;
-          background: radial-gradient(circle at center, #150d26 0%, #030206 75%);
+          background: #030206;
           color: #efe6d2;
           font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
           overflow: hidden;
         }
 
+        .bg-video-layer {
+          position: absolute;
+          inset: 0;
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          opacity: 0.24;
+          filter: saturate(1.1) brightness(0.65);
+          pointer-events: none;
+        }
+
+        .stage-vignette {
+          position: absolute;
+          inset: 0;
+          background: radial-gradient(circle at center, transparent 30%, #030206 85%);
+          pointer-events: none;
+        }
+
+        #outro-stage {
+          position: relative;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          z-index: 10;
+          will-change: transform;
+        }
+
         .logo-frame {
+          position: relative;
           width: 180px;
           height: 180px;
           border-radius: 32px;
@@ -43,6 +71,22 @@
           height: 100%;
           object-fit: cover;
           display: block;
+        }
+
+        .sheen-light-sweep {
+          position: absolute;
+          top: -50%;
+          left: 0;
+          width: 60%;
+          height: 200%;
+          background: linear-gradient(
+            90deg,
+            transparent,
+            rgba(255, 255, 255, 0.35),
+            transparent
+          );
+          transform: rotate(25deg);
+          pointer-events: none;
         }
 
         .title-main {
@@ -91,21 +135,44 @@
         }
       </style>
 
-      <div id="root" data-composition-id="c7-outro" data-width="1920" data-height="1080" data-hold>
-        <div id="outro-logo-wrap" class="logo-frame">
-          <img class="chog-logo-img" src="assets/media/chog-logo.jpg" alt="Chog Genesis Flame Logo" />
-        </div>
-        <h1 id="outro-title" class="title-main">CHOG SWARM</h1>
-        <div id="outro-sub" class="title-sub">BUILT FOR CHOGATHON 2026 • LIVE ON MONAD</div>
-        <div id="outro-pill" class="url-pill" data-layout-ignore>
-          <span class="url-dot"></span>
-          chog-swarm.vercel.app
+      <div id="root" data-composition-id="c7-outro" data-width="1920" data-height="1080">
+        <video
+          id="outro-bg"
+          class="bg-video-layer"
+          src="assets/media/halloween-background-loop.mp4"
+          data-start="0"
+          data-duration="10"
+          muted
+          playsinline
+        ></video>
+        <div class="stage-vignette"></div>
+
+        <div id="outro-stage">
+          <div id="outro-logo-wrap" class="logo-frame" data-layout-allow-overflow>
+            <img class="chog-logo-img" src="assets/media/chog-logo.jpg" alt="Chog Genesis Flame Logo" />
+            <div id="outro-logo-sheen" class="sheen-light-sweep" data-layout-allow-overflow></div>
+          </div>
+          <h1 id="outro-title" class="title-main">CHOG SWARM</h1>
+          <div id="outro-sub" class="title-sub" data-layout-ignore>BUILT FOR CHOGATHON 2026 • LIVE ON MONAD</div>
+          <div id="outro-pill" class="url-pill" data-layout-ignore>
+            <span class="url-dot"></span>
+            chog-swarm.vercel.app
+          </div>
         </div>
       </div>
 
       <script>
         const tl = gsap.timeline({ paused: true });
 
+        // Continuous slow camera pull-back and drift across the entire 10 seconds
+        tl.fromTo(
+          "#outro-stage",
+          { scale: 1.06, rotateZ: 0.5, y: -6 },
+          { scale: 0.96, rotateZ: -0.5, y: 6, duration: 10.0, ease: "sine.inOut" },
+          0.0
+        );
+
+        // Entrance reveals
         tl.fromTo(
           "#outro-logo-wrap",
           { scale: 0.7, opacity: 0, y: 25 },
@@ -132,6 +199,28 @@
           { opacity: 0, scale: 0.9 },
           { opacity: 1, scale: 1.0, duration: 0.6, ease: "power2.out" },
           1.2
+        );
+
+        // Moving sheen sweep across Flame Chog logo using transform x
+        tl.fromTo(
+          "#outro-logo-sheen",
+          { x: -220 },
+          { x: 340, duration: 1.2, ease: "power2.inOut" },
+          2.0
+        );
+
+        tl.fromTo(
+          "#outro-logo-sheen",
+          { x: -220 },
+          { x: 340, duration: 1.2, ease: "power2.inOut", immediateRender: false },
+          5.5
+        );
+
+        tl.fromTo(
+          "#outro-logo-sheen",
+          { x: -220 },
+          { x: 340, duration: 1.2, ease: "power2.inOut", immediateRender: false },
+          8.0
         );
 
         window.__timelines["c7-outro"] = tl;

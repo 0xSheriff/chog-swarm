@@ -118,6 +118,43 @@
           display: block;
         }
 
+        /* High-fidelity Vector Cursor Decoupled Layer */
+        .vector-cursor {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 32px;
+          height: 32px;
+          pointer-events: none;
+          z-index: 50;
+          transform: translate3d(0, 0, 0);
+          filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.65));
+          opacity: 0;
+        }
+
+        .vector-cursor svg {
+          width: 100%;
+          height: 100%;
+          display: block;
+        }
+
+        .cursor-ripple {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 44px;
+          height: 44px;
+          margin-top: -22px;
+          margin-left: -22px;
+          border-radius: 50%;
+          border: 2px solid #ff7a1a;
+          box-shadow: 0 0 16px #ff7a1a, inset 0 0 8px rgba(255, 122, 26, 0.4);
+          opacity: 0;
+          pointer-events: none;
+          transform: scale(0.2);
+          z-index: 49;
+        }
+
         .spotlight-ring {
           position: absolute;
           top: 360px;
@@ -214,6 +251,14 @@
                 playsinline
               ></video>
               <div id="c1-ring" class="spotlight-ring"></div>
+
+              <!-- Vector Cursor Overlay -->
+              <div id="c1-cursor" class="vector-cursor">
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M5.5 3.21V20.8c0 .45.54.67.85.35l4.86-4.86a.5.5 0 0 1 .35-.15h6.87c.45 0 .67-.54.35-.85L6.35 2.85a.5.5 0 0 0-.85.36z" fill="#FFFFFF" stroke="#000000" stroke-width="1.5" stroke-linejoin="round"/>
+                </svg>
+              </div>
+              <div id="c1-ripple" class="cursor-ripple"></div>
             </div>
           </div>
         </div>
@@ -239,12 +284,47 @@
           0.0
         );
 
-        // Slow camera drift while cursor moves
+        // Slow continuous camera drift while cursor moves
         tl.to(
           "#c1-browser",
           { rotateX: 4, rotateY: -5, rotateZ: 0.5, scale: 1.0, duration: 12.0, ease: "sine.inOut" },
           1.4
         );
+
+        // Vector cursor trajectory
+        tl.fromTo(
+          "#c1-cursor",
+          { x: 280, y: 120, opacity: 0 },
+          { x: 340, y: 180, opacity: 1, duration: 0.6, ease: "power2.out" },
+          0.8
+        );
+
+        // Glide cursor to blocked wallet address
+        tl.to("#c1-cursor", { x: 700, y: 390, duration: 1.6, ease: "power2.inOut" }, 1.5);
+
+        // Move to Monad Explorer link
+        tl.to("#c1-cursor", { x: 740, y: 440, duration: 1.4, ease: "power2.inOut" }, 4.4);
+
+        // Click on explorer link with ripple
+        tl.fromTo(
+          "#c1-ripple",
+          { x: 740, y: 440, scale: 0.2, opacity: 0.95 },
+          { scale: 1.8, opacity: 0, duration: 0.5, ease: "power2.out" },
+          5.8
+        );
+        tl.to("#c1-cursor", { scale: 0.88, duration: 0.1, yoyo: true, repeat: 1, ease: "power1.inOut" }, 5.8);
+
+        // Move cursor to Creator / Judge pass input
+        tl.to("#c1-cursor", { x: 690, y: 500, duration: 1.8, ease: "power2.inOut" }, 7.4);
+
+        // Click input with ripple
+        tl.fromTo(
+          "#c1-ripple",
+          { x: 690, y: 500, scale: 0.2, opacity: 0.95 },
+          { scale: 1.8, opacity: 0, duration: 0.5, ease: "power2.out", immediateRender: false },
+          9.4
+        );
+        tl.to("#c1-cursor", { scale: 0.88, duration: 0.1, yoyo: true, repeat: 1, ease: "power1.inOut" }, 9.4);
 
         // Dynamic push-in on blocked screen at 13.5s
         tl.to(
@@ -252,6 +332,9 @@
           { rotateX: 0, rotateY: 0, rotateZ: 0, scale: 1.35, x: -140, y: -70, duration: 1.4, ease: "power3.inOut" },
           13.5
         );
+
+        // Fade cursor out as camera pushes in
+        tl.to("#c1-cursor", { opacity: 0, x: 900, y: 560, duration: 0.8, ease: "power2.in" }, 13.0);
 
         // Spotlight ring reveal
         tl.fromTo(
@@ -273,6 +356,13 @@
           { x: 60, opacity: 0 },
           { x: 0, opacity: 1, duration: 0.8, ease: "power3.out" },
           14.2
+        );
+
+        // Continuous subtle drift while zoomed in so zero frames stall
+        tl.to(
+          "#c1-browser",
+          { scale: 1.38, x: -150, y: -75, duration: 8.5, ease: "sine.inOut" },
+          14.9
         );
 
         // Fade out before next scene

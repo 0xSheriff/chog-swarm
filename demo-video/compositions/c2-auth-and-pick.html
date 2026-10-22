@@ -118,6 +118,43 @@
           display: block;
         }
 
+        /* High-fidelity Vector Cursor Decoupled Layer */
+        .vector-cursor {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 32px;
+          height: 32px;
+          pointer-events: none;
+          z-index: 50;
+          transform: translate3d(0, 0, 0);
+          filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.65));
+          opacity: 0;
+        }
+
+        .vector-cursor svg {
+          width: 100%;
+          height: 100%;
+          display: block;
+        }
+
+        .cursor-ripple {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 44px;
+          height: 44px;
+          margin-top: -22px;
+          margin-left: -22px;
+          border-radius: 50%;
+          border: 2px solid #ff7a1a;
+          box-shadow: 0 0 16px #ff7a1a, inset 0 0 8px rgba(255, 122, 26, 0.4);
+          opacity: 0;
+          pointer-events: none;
+          transform: scale(0.2);
+          z-index: 49;
+        }
+
         .step-badge {
           position: absolute;
           top: 60px;
@@ -147,7 +184,7 @@
         .overlay-card {
           position: absolute;
           bottom: 70px;
-          left: 80px;
+          right: 80px;
           max-width: 520px;
           padding: 24px 32px;
           background: rgba(10, 7, 18, 0.92);
@@ -231,6 +268,14 @@
                 muted
                 playsinline
               ></video>
+
+              <!-- Vector Cursor Overlay -->
+              <div id="c2-cursor" class="vector-cursor">
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M5.5 3.21V20.8c0 .45.54.67.85.35l4.86-4.86a.5.5 0 0 1 .35-.15h6.87c.45 0 .67-.54.35-.85L6.35 2.85a.5.5 0 0 0-.85.36z" fill="#FFFFFF" stroke="#000000" stroke-width="1.5" stroke-linejoin="round"/>
+                </svg>
+              </div>
+              <div id="c2-ripple" class="cursor-ripple"></div>
             </div>
           </div>
         </div>
@@ -262,12 +307,56 @@
           0.4
         );
 
-        // Drift as modal is selected
+        // Continuous slow drift as modal is selected
         tl.to(
           "#c2-browser",
           { rotateX: 4, rotateY: 4, rotateZ: 0, scale: 1.0, duration: 14.0, ease: "sine.inOut" },
           1.4
         );
+
+        // Vector cursor trajectory
+        tl.fromTo(
+          "#c2-cursor",
+          { x: 400, y: 180, opacity: 0 },
+          { x: 480, y: 160, opacity: 1, duration: 0.6, ease: "power2.out" },
+          0.8
+        );
+
+        // Glide cursor to "Switch Chog" button
+        tl.to("#c2-cursor", { x: 840, y: 130, duration: 1.6, ease: "power2.inOut" }, 1.4);
+
+        // Click "Switch Chog" with ripple
+        tl.fromTo(
+          "#c2-ripple",
+          { x: 840, y: 130, scale: 0.2, opacity: 0.95 },
+          { scale: 1.8, opacity: 0, duration: 0.5, ease: "power2.out" },
+          2.9
+        );
+        tl.to("#c2-cursor", { scale: 0.88, duration: 0.1, yoyo: true, repeat: 1, ease: "power1.inOut" }, 2.9);
+
+        // Glide cursor down into modal grid
+        tl.to("#c2-cursor", { x: 700, y: 360, duration: 1.8, ease: "power2.inOut" }, 4.5);
+        tl.to("#c2-cursor", { x: 700, y: 500, duration: 2.2, ease: "power1.inOut" }, 6.5);
+
+        // Select Chog #143
+        tl.to("#c2-cursor", { x: 700, y: 460, duration: 1.2, ease: "power2.inOut" }, 9.2);
+        tl.fromTo(
+          "#c2-ripple",
+          { x: 700, y: 460, scale: 0.2, opacity: 0.95 },
+          { scale: 1.8, opacity: 0, duration: 0.5, ease: "power2.out", immediateRender: false },
+          10.5
+        );
+        tl.to("#c2-cursor", { scale: 0.88, duration: 0.1, yoyo: true, repeat: 1, ease: "power1.inOut" }, 10.5);
+
+        // Glide cursor to "START RACE"
+        tl.to("#c2-cursor", { x: 700, y: 720, duration: 1.8, ease: "power2.inOut" }, 13.0);
+        tl.fromTo(
+          "#c2-ripple",
+          { x: 700, y: 720, scale: 0.2, opacity: 0.95 },
+          { scale: 1.8, opacity: 0, duration: 0.5, ease: "power2.out", immediateRender: false },
+          15.2
+        );
+        tl.to("#c2-cursor", { scale: 0.88, duration: 0.1, yoyo: true, repeat: 1, ease: "power1.inOut" }, 15.2);
 
         // Push in on the Start Race button
         tl.to(
@@ -283,6 +372,16 @@
           { x: 0, opacity: 1, duration: 0.8, ease: "power3.out" },
           16.8
         );
+
+        // Continuous subtle drift while zoomed in so zero frames stall
+        tl.to(
+          "#c2-browser",
+          { scale: 1.28, y: -65, duration: 8.0, ease: "sine.inOut" },
+          17.4
+        );
+
+        // Cursor glides aside
+        tl.to("#c2-cursor", { x: 880, y: 640, duration: 2.0, ease: "power2.out" }, 16.5);
 
         // Transition out
         tl.to(

@@ -17,16 +17,44 @@
           position: absolute;
           inset: 0;
           display: flex;
-          flex-direction: column;
           align-items: center;
           justify-content: center;
-          background: radial-gradient(circle at center, #150d26 0%, #030206 75%);
+          background: #030206;
           color: #efe6d2;
           font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
           overflow: hidden;
         }
 
+        .bg-video-layer {
+          position: absolute;
+          inset: 0;
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          opacity: 0.24;
+          filter: saturate(1.1) brightness(0.65);
+          pointer-events: none;
+        }
+
+        .stage-vignette {
+          position: absolute;
+          inset: 0;
+          background: radial-gradient(circle at center, transparent 30%, #030206 85%);
+          pointer-events: none;
+        }
+
+        #cold-stage {
+          position: relative;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          z-index: 10;
+          will-change: transform;
+        }
+
         .logo-frame {
+          position: relative;
           width: 170px;
           height: 170px;
           border-radius: 30px;
@@ -43,6 +71,22 @@
           height: 100%;
           object-fit: cover;
           display: block;
+        }
+
+        .sheen-light-sweep {
+          position: absolute;
+          top: -50%;
+          left: 0;
+          width: 60%;
+          height: 200%;
+          background: linear-gradient(
+            90deg,
+            transparent,
+            rgba(255, 255, 255, 0.35),
+            transparent
+          );
+          transform: rotate(25deg);
+          pointer-events: none;
         }
 
         .title-main {
@@ -102,22 +146,45 @@
         }
       </style>
 
-      <div id="root" data-composition-id="c0-cold-open" data-width="1920" data-height="1080" data-hold>
-        <div id="cold-logo-wrap" class="logo-frame">
-          <img class="chog-logo-img" src="assets/media/chog-logo.jpg" alt="Chog Genesis Flame Logo" />
-        </div>
-        <h1 id="cold-title" class="title-main">CHOG SWARM</h1>
-        <div id="cold-sub" class="title-sub">HALLOWEEN EDITION • AUTONOMOUS PINBALL</div>
-        <div id="cold-hook" class="hook-text">THE NFT IS THE DRIVER, NOT THE BADGE</div>
-        <div id="cold-pill" class="monad-pill" data-layout-ignore>
-          <span class="monad-dot"></span>
-          Monad Chain 143 • Verified Gate
+      <div id="root" data-composition-id="c0-cold-open" data-width="1920" data-height="1080">
+        <video
+          id="cold-bg"
+          class="bg-video-layer"
+          src="assets/media/halloween-background-loop.mp4"
+          data-start="0"
+          data-duration="8"
+          muted
+          playsinline
+        ></video>
+        <div class="stage-vignette"></div>
+
+        <div id="cold-stage">
+          <div id="cold-logo-wrap" class="logo-frame">
+            <img class="chog-logo-img" src="assets/media/chog-logo.jpg" alt="Chog Genesis Flame Logo" />
+            <div id="cold-logo-sheen" class="sheen-light-sweep"></div>
+          </div>
+          <h1 id="cold-title" class="title-main">CHOG SWARM</h1>
+          <div id="cold-sub" class="title-sub" data-layout-ignore>HALLOWEEN EDITION • AUTONOMOUS PINBALL</div>
+          <div id="cold-hook" class="hook-text" data-layout-ignore>THE NFT IS THE DRIVER, NOT THE BADGE</div>
+          <div id="cold-pill" class="monad-pill" data-layout-ignore>
+            <span class="monad-dot"></span>
+            Monad Chain 143 • Verified Gate
+          </div>
         </div>
       </div>
 
       <script>
         const tl = gsap.timeline({ paused: true });
 
+        // Continuous slow camera push-in and drift across 7.4 seconds
+        tl.fromTo(
+          "#cold-stage",
+          { scale: 0.94, rotateZ: -0.6, y: 12 },
+          { scale: 1.05, rotateZ: 0.6, y: -8, duration: 7.4, ease: "sine.inOut" },
+          0.0
+        );
+
+        // Entrance reveals
         tl.fromTo(
           "#cold-logo-wrap",
           { scale: 0.85, opacity: 0.7, y: 15 },
@@ -153,10 +220,26 @@
           2.0
         );
 
+        // Specular light sweep across Flame Chog logo using transform x
+        tl.fromTo(
+          "#cold-logo-sheen",
+          { x: -220 },
+          { x: 320, duration: 1.2, ease: "power2.inOut" },
+          2.2
+        );
+
+        tl.fromTo(
+          "#cold-logo-sheen",
+          { x: -220 },
+          { x: 320, duration: 1.2, ease: "power2.inOut", immediateRender: false },
+          5.0
+        );
+
+        // Smooth transition out into Scene 1 without overlapping scale
         tl.to(
-          "#cold-logo-wrap, #cold-title, #cold-sub, #cold-hook, #cold-pill",
-          { opacity: 0, scale: 0.92, duration: 0.6, ease: "power3.in" },
-          7.2
+          "#cold-stage",
+          { opacity: 0, duration: 0.6, ease: "power3.in" },
+          7.4
         );
 
         window.__timelines["c0-cold-open"] = tl;

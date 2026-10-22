@@ -118,6 +118,43 @@
           display: block;
         }
 
+        /* High-fidelity Vector Cursor Decoupled Layer */
+        .vector-cursor {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 32px;
+          height: 32px;
+          pointer-events: none;
+          z-index: 50;
+          transform: translate3d(0, 0, 0);
+          filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.65));
+          opacity: 0;
+        }
+
+        .vector-cursor svg {
+          width: 100%;
+          height: 100%;
+          display: block;
+        }
+
+        .cursor-ripple {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 44px;
+          height: 44px;
+          margin-top: -22px;
+          margin-left: -22px;
+          border-radius: 50%;
+          border: 2px solid #ff7a1a;
+          box-shadow: 0 0 16px #ff7a1a, inset 0 0 8px rgba(255, 122, 26, 0.4);
+          opacity: 0;
+          pointer-events: none;
+          transform: scale(0.2);
+          z-index: 49;
+        }
+
         .step-badge {
           position: absolute;
           top: 60px;
@@ -231,6 +268,14 @@
                 muted
                 playsinline
               ></video>
+
+              <!-- Vector Cursor Overlay -->
+              <div id="c3-cursor" class="vector-cursor">
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M5.5 3.21V20.8c0 .45.54.67.85.35l4.86-4.86a.5.5 0 0 1 .35-.15h6.87c.45 0 .67-.54.35-.85L6.35 2.85a.5.5 0 0 0-.85.36z" fill="#FFFFFF" stroke="#000000" stroke-width="1.5" stroke-linejoin="round"/>
+                </svg>
+              </div>
+              <div id="c3-ripple" class="cursor-ripple"></div>
             </div>
           </div>
         </div>
@@ -262,14 +307,36 @@
           0.4
         );
 
-        // Slow camera drift across table
+        // Slow camera drift across table from 1.4s to 16.0s
         tl.to(
           "#c3-browser",
-          { rotateX: 1, rotateY: 1, scale: 1.12, duration: 14.0, ease: "sine.inOut" },
+          { rotateX: 1, rotateY: 1, scale: 1.15, duration: 14.6, ease: "sine.inOut" },
           1.4
         );
 
-        // Zoom in to inspect finish / celebration
+        // Vector cursor tracking ball action across table
+        tl.fromTo(
+          "#c3-cursor",
+          { x: 680, y: 690, opacity: 0 },
+          { x: 700, y: 710, opacity: 1, duration: 0.6, ease: "power2.out" },
+          0.6
+        );
+
+        // Hit start race
+        tl.fromTo(
+          "#c3-ripple",
+          { x: 700, y: 710, scale: 0.2, opacity: 0.95 },
+          { scale: 1.8, opacity: 0, duration: 0.5, ease: "power2.out" },
+          1.2
+        );
+
+        // Ball tracking motion
+        tl.to("#c3-cursor", { x: 720, y: 450, duration: 1.8, ease: "power2.inOut" }, 1.8);
+        tl.to("#c3-cursor", { x: 640, y: 520, duration: 3.2, ease: "sine.inOut" }, 4.0);
+        tl.to("#c3-cursor", { x: 780, y: 380, duration: 4.5, ease: "power1.inOut" }, 8.0);
+        tl.to("#c3-cursor", { x: 700, y: 320, duration: 3.5, ease: "power2.inOut" }, 13.0);
+
+        // Zoom in to inspect finish / celebration at 16.0s
         tl.to(
           "#c3-browser",
           { rotateX: 0, rotateY: 0, scale: 1.25, y: -40, duration: 1.4, ease: "power3.inOut" },
@@ -283,6 +350,25 @@
           { x: 0, opacity: 1, duration: 0.8, ease: "power3.out" },
           16.8
         );
+
+        // CRUCIAL: Continuous camera push-in and drift through the entire finish / celebration (17.4s - 27.4s)
+        // This eliminates the 73s - 83s dead stretch!
+        tl.to(
+          "#c3-browser",
+          { scale: 1.32, y: -60, x: -15, duration: 10.0, ease: "sine.inOut" },
+          17.4
+        );
+
+        // Celebration badge click & pulse
+        tl.to("#c3-cursor", { x: 720, y: 340, duration: 2.0, ease: "power2.inOut" }, 20.0);
+        tl.fromTo(
+          "#c3-ripple",
+          { x: 720, y: 340, scale: 0.2, opacity: 0.95 },
+          { scale: 2.0, opacity: 0, duration: 0.6, ease: "power2.out", immediateRender: false },
+          22.5
+        );
+        tl.to("#c3-cursor", { scale: 0.88, duration: 0.1, yoyo: true, repeat: 1, ease: "power1.inOut" }, 22.5);
+        tl.to("#c3-cursor", { x: 760, y: 400, duration: 3.0, ease: "sine.inOut" }, 23.5);
 
         // Transition out
         tl.to(

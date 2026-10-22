@@ -118,6 +118,43 @@
           display: block;
         }
 
+        /* High-fidelity Vector Cursor Decoupled Layer */
+        .vector-cursor {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 32px;
+          height: 32px;
+          pointer-events: none;
+          z-index: 50;
+          transform: translate3d(0, 0, 0);
+          filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.65));
+          opacity: 0;
+        }
+
+        .vector-cursor svg {
+          width: 100%;
+          height: 100%;
+          display: block;
+        }
+
+        .cursor-ripple {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 44px;
+          height: 44px;
+          margin-top: -22px;
+          margin-left: -22px;
+          border-radius: 50%;
+          border: 2px solid #ff7a1a;
+          box-shadow: 0 0 16px #ff7a1a, inset 0 0 8px rgba(255, 122, 26, 0.4);
+          opacity: 0;
+          pointer-events: none;
+          transform: scale(0.2);
+          z-index: 49;
+        }
+
         .step-badge {
           position: absolute;
           top: 60px;
@@ -231,15 +268,23 @@
                 muted
                 playsinline
               ></video>
+
+              <!-- Vector Cursor Overlay -->
+              <div id="c5-cursor" class="vector-cursor">
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M5.5 3.21V20.8c0 .45.54.67.85.35l4.86-4.86a.5.5 0 0 1 .35-.15h6.87c.45 0 .67-.54.35-.85L6.35 2.85a.5.5 0 0 0-.85.36z" fill="#FFFFFF" stroke="#000000" stroke-width="1.5" stroke-linejoin="round"/>
+                </svg>
+              </div>
+              <div id="c5-ripple" class="cursor-ripple"></div>
             </div>
           </div>
         </div>
 
         <div id="c5-card" class="overlay-card">
-          <div class="card-tag" data-layout-ignore>Retention 20% & Anti-Cheat</div>
-          <div class="card-title">SERVER-SIDE RE-SIMULATION</div>
+          <div class="card-tag" data-layout-ignore>Cryptographic Anti-Cheat</div>
+          <div class="card-title">SERVER REPLAY VERIFICATION</div>
           <div class="card-body" data-layout-ignore>
-            24-hour global seeds with tick verification. Creator passes excluded from public rank.
+            Every daily submission is re-simulated server-side. Scores are cryptographically rejected if checksums diverge.
           </div>
         </div>
       </div>
@@ -269,6 +314,34 @@
           1.4
         );
 
+        // Vector cursor trajectory
+        tl.fromTo(
+          "#c5-cursor",
+          { x: 420, y: 240, opacity: 0 },
+          { x: 480, y: 270, opacity: 1, duration: 0.6, ease: "power2.out" },
+          0.8
+        );
+
+        // Glide to "RUN DAILY SEED"
+        tl.to("#c5-cursor", { x: 700, y: 320, duration: 1.6, ease: "power2.inOut" }, 1.4);
+        tl.fromTo(
+          "#c5-ripple",
+          { x: 700, y: 320, scale: 0.2, opacity: 0.95 },
+          { scale: 1.8, opacity: 0, duration: 0.5, ease: "power2.out" },
+          3.1
+        );
+        tl.to("#c5-cursor", { scale: 0.88, duration: 0.1, yoyo: true, repeat: 1, ease: "power1.inOut" }, 3.1);
+
+        // Glide to server verification hash
+        tl.to("#c5-cursor", { x: 700, y: 540, duration: 3.5, ease: "power2.inOut" }, 4.5);
+        tl.fromTo(
+          "#c5-ripple",
+          { x: 700, y: 540, scale: 0.2, opacity: 0.95 },
+          { scale: 1.8, opacity: 0, duration: 0.5, ease: "power2.out", immediateRender: false },
+          8.0
+        );
+        tl.to("#c5-cursor", { scale: 0.88, duration: 0.1, yoyo: true, repeat: 1, ease: "power1.inOut" }, 8.0);
+
         // Zoom in to verify server hash check
         tl.to(
           "#c5-browser",
@@ -283,6 +356,18 @@
           { x: 0, opacity: 1, duration: 0.8, ease: "power3.out" },
           14.8
         );
+
+        // Continuous subtle drift while zoomed in so zero frames stall
+        tl.to(
+          "#c5-browser",
+          { scale: 1.28, x: 45, y: -45, duration: 10.0, ease: "sine.inOut" },
+          15.4
+        );
+
+        // Scroll down through leaderboard
+        tl.to("#c5-cursor", { x: 700, y: 640, duration: 2.5, ease: "power1.inOut" }, 12.5);
+        tl.to("#c5-cursor", { x: 700, y: 720, duration: 3.0, ease: "power1.inOut" }, 16.0);
+        tl.to("#c5-cursor", { x: 720, y: 680, duration: 3.0, ease: "sine.inOut" }, 20.0);
 
         // Transition out
         tl.to(

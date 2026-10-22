@@ -90,10 +90,6 @@ export function HalloweenBackground() {
       targetX = (e.clientX / window.innerWidth) * 2 - 1;
       targetY = (e.clientY / window.innerHeight) * 2 - 1;
       lastActiveTime = performance.now();
-
-      // Specular sheen tracking for panels
-      document.documentElement.style.setProperty('--mx', targetX.toFixed(3));
-      document.documentElement.style.setProperty('--my', targetY.toFixed(3));
     };
 
     const handleScroll = () => {
@@ -120,7 +116,6 @@ export function HalloweenBackground() {
     };
 
     window.addEventListener('mousemove', handlePointerMove, { passive: true });
-    window.addEventListener('pointermove', handlePointerMove, { passive: true });
     window.addEventListener('scroll', handleScroll, { passive: true });
     document.addEventListener('visibilitychange', handleVisibility);
     if (typeof window !== 'undefined' && 'DeviceOrientationEvent' in window) {
@@ -181,7 +176,6 @@ export function HalloweenBackground() {
     return () => {
       cancelAnimationFrame(rafId);
       window.removeEventListener('mousemove', handlePointerMove);
-      window.removeEventListener('pointermove', handlePointerMove);
       window.removeEventListener('scroll', handleScroll);
       document.removeEventListener('visibilitychange', handleVisibility);
       if (typeof window !== 'undefined' && 'DeviceOrientationEvent' in window) {
@@ -404,6 +398,7 @@ export function HalloweenBackground() {
         ref={layer1Ref}
         data-testid="parallax-layer-1"
         className="absolute -inset-[60px] w-[calc(100%+120px)] h-[calc(100%+120px)] will-change-transform"
+        style={{ contain: 'paint' }}
       >
         {/* Breathing Warm/Cold Light Pools behind quadrants */}
         {themeFx.breathingGlow && (
@@ -495,6 +490,7 @@ export function HalloweenBackground() {
         ref={layer2Ref}
         data-testid="parallax-layer-2"
         className="absolute -inset-[60px] w-[calc(100%+120px)] h-[calc(100%+120px)] will-change-transform"
+        style={{ contain: 'paint' }}
       >
         {focusConfig.image && (
           <img
@@ -511,6 +507,7 @@ export function HalloweenBackground() {
         ref={layer3Ref}
         data-testid="parallax-layer-3"
         className="absolute -inset-[60px] w-[calc(100%+120px)] h-[calc(100%+120px)] will-change-transform"
+        style={{ contain: 'paint' }}
       >
         {/* Fog Band 1 (60s loop) */}
         {themeFx.fog && (
@@ -553,6 +550,7 @@ export function HalloweenBackground() {
         ref={layer4Ref}
         data-testid="parallax-layer-4"
         className="absolute -inset-[60px] w-[calc(100%+120px)] h-[calc(100%+120px)] will-change-transform"
+        style={{ contain: 'paint' }}
       >
         {/* Radial Vignette: transparent center to #0a0712 at edges */}
         {themeFx.vignette && (

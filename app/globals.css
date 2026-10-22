@@ -56,23 +56,23 @@ body {
   min-height: 100vh;
 }
 
-/* Glass Panels */
-.glass-panel,
-.bg-chog-card,
-.bg-chog-surface1,
-.bg-chog-surface2 {
-  position: relative;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-}
-
+/* Glass Panels (Only large container panels use backdrop-filter at 6px blur) */
 .glass-panel {
+  position: relative;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
   background-color: rgba(10, 7, 18, 0.72) !important;
   border: 1px solid rgba(239, 230, 210, 0.12);
   color: #efe6d2;
   border-radius: 0.75rem;
   overflow: hidden;
   transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.bg-chog-card,
+.bg-chog-surface1,
+.bg-chog-surface2 {
+  position: relative;
 }
 
 /* Panel Edge Light: 1px inner top border rgba(255,255,255,0.28), 1px inner bottom border rgba(0,0,0,0.4) */

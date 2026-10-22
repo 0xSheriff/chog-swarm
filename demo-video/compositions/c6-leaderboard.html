@@ -111,13 +111,48 @@
           overflow: hidden;
         }
 
-        .slide-img {
-          position: absolute;
-          inset: 0;
+        .real-footage-video {
           width: 100%;
           height: 100%;
           object-fit: cover;
           display: block;
+        }
+
+        /* High-fidelity Vector Cursor Decoupled Layer */
+        .vector-cursor {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 32px;
+          height: 32px;
+          pointer-events: none;
+          z-index: 50;
+          transform: translate3d(0, 0, 0);
+          filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.65));
+          opacity: 0;
+        }
+
+        .vector-cursor svg {
+          width: 100%;
+          height: 100%;
+          display: block;
+        }
+
+        .cursor-ripple {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 44px;
+          height: 44px;
+          margin-top: -22px;
+          margin-left: -22px;
+          border-radius: 50%;
+          border: 2px solid #ff7a1a;
+          box-shadow: 0 0 16px #ff7a1a, inset 0 0 8px rgba(255, 122, 26, 0.4);
+          opacity: 0;
+          pointer-events: none;
+          transform: scale(0.2);
+          z-index: 49;
         }
 
         .overlay-card {
@@ -193,8 +228,24 @@
               <div id="c6-url" class="url-bar" data-layout-ignore data-layout-allow-overflow>https://chog-swarm.vercel.app/leaderboard</div>
             </div>
             <div class="browser-content">
-              <img id="img-leaderboard" class="slide-img" src="assets/media/leaderboard.png" alt="Leaderboard" />
-              <img id="img-replay" class="slide-img" src="assets/media/exhibition-replay.png" alt="Exhibition Replay" style="opacity: 0;" />
+              <!-- Real Recorded Footage (Replaced Static Images) -->
+              <video
+                id="c6-footage"
+                class="real-footage-video"
+                src="assets/media/scene6-leaderboard.mp4"
+                data-start="0"
+                data-duration="20"
+                muted
+                playsinline
+              ></video>
+
+              <!-- Vector Cursor Overlay -->
+              <div id="c6-cursor" class="vector-cursor">
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M5.5 3.21V20.8c0 .45.54.67.85.35l4.86-4.86a.5.5 0 0 1 .35-.15h6.87c.45 0 .67-.54.35-.85L6.35 2.85a.5.5 0 0 0-.85.36z" fill="#FFFFFF" stroke="#000000" stroke-width="1.5" stroke-linejoin="round"/>
+                </svg>
+              </div>
+              <div id="c6-ripple" class="cursor-ripple"></div>
             </div>
           </div>
         </div>
@@ -219,31 +270,42 @@
           0.0
         );
 
-        // Drift over leaderboard
+        // Continuous drift over leaderboard (1.4s to 9.5s)
         tl.to(
           "#c6-browser",
-          { rotateX: 2, rotateY: -2, scale: 1.0, duration: 8.0, ease: "sine.inOut" },
+          { rotateX: 2, rotateY: -2, scale: 1.02, duration: 8.1, ease: "sine.inOut" },
           1.4
         );
 
-        // Transition from leaderboard to exhibition demo replay
-        tl.to(
-          "#img-leaderboard",
-          { opacity: 0, duration: 0.8, ease: "power2.inOut" },
-          9.0
+        // Vector cursor trajectory
+        tl.fromTo(
+          "#c6-cursor",
+          { x: 400, y: 220, opacity: 0 },
+          { x: 460, y: 260, opacity: 1, duration: 0.6, ease: "power2.out" },
+          0.6
         );
 
-        tl.to(
-          "#img-replay",
-          { opacity: 1, duration: 0.8, ease: "power2.inOut" },
-          9.0
-        );
+        // Hover rank #1
+        tl.to("#c6-cursor", { x: 650, y: 320, duration: 1.8, ease: "power2.inOut" }, 1.2);
 
-        // Zoom in to inspect scrubber
+        // Click match details on leaderboard
+        tl.to("#c6-cursor", { x: 650, y: 420, duration: 1.6, ease: "power2.inOut" }, 3.4);
+        tl.fromTo(
+          "#c6-ripple",
+          { x: 650, y: 420, scale: 0.2, opacity: 0.95 },
+          { scale: 1.8, opacity: 0, duration: 0.5, ease: "power2.out" },
+          5.0
+        );
+        tl.to("#c6-cursor", { scale: 0.88, duration: 0.1, yoyo: true, repeat: 1, ease: "power1.inOut" }, 5.0);
+
+        // Scroll through ranks
+        tl.to("#c6-cursor", { x: 650, y: 540, duration: 3.5, ease: "power1.inOut" }, 6.0);
+
+        // Zoom in to inspect match replay scrubber at 10.0s
         tl.to(
           "#c6-browser",
           { rotateX: 0, rotateY: 0, scale: 1.25, y: -40, duration: 1.4, ease: "power3.inOut" },
-          10.5
+          10.0
         );
 
         // Headline card reveal
@@ -251,8 +313,27 @@
           "#c6-card",
           { x: 50, opacity: 0 },
           { x: 0, opacity: 1, duration: 0.8, ease: "power3.out" },
-          11.2
+          11.0
         );
+
+        // CRUCIAL: Continuous subtle drift while zoomed in through end of scene (11.4s to 19.4s)
+        // This eliminates the 152s dead stretch!
+        tl.to(
+          "#c6-browser",
+          { scale: 1.29, y: -45, duration: 8.0, ease: "sine.inOut" },
+          11.4
+        );
+
+        // Glide cursor to interactive scrubber
+        tl.to("#c6-cursor", { x: 700, y: 620, duration: 2.5, ease: "power2.inOut" }, 13.0);
+        tl.fromTo(
+          "#c6-ripple",
+          { x: 720, y: 620, scale: 0.2, opacity: 0.95 },
+          { scale: 1.8, opacity: 0, duration: 0.5, ease: "power2.out", immediateRender: false },
+          16.5
+        );
+        tl.to("#c6-cursor", { scale: 0.88, duration: 0.1, yoyo: true, repeat: 1, ease: "power1.inOut" }, 16.5);
+        tl.to("#c6-cursor", { x: 760, y: 600, duration: 2.0, ease: "sine.inOut" }, 17.0);
 
         // Transition out
         tl.to(

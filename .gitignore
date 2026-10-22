@@ -41,4 +41,7 @@ motion-test/.hyperframes/
 demo-video/assets/media/*.mp4
 demo-video/.hyperframes/
 .tmp_video_rec/
+.tmp_video_clean/
 .ref_frames/
+.venv/
+assests/
