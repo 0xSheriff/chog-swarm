@@ -93,8 +93,13 @@ Chog Swarm is a premium-tier autonomous web game built for Chogathon 2026 (choga
 - Pushed all commits through `44e39e3` to GitHub `origin master`. Confirmed `.npmrc` is tracked and live on GitHub (`legacy-peer-deps=true`), and verified a fresh clone from GitHub builds and tests cleanly.
 - Handled literal `\n` conversion for Firestore private keys in `lib/leaderboard-store.ts` via branch `netlify-fix` (merged in `9782085`).
 - Configured Netlify build environment (`NPM_CONFIG_LEGACY_PEER_DEPS=true`, site ID: `90ecd53e-762b-4004-b2d2-2e9d75c49e30`).
-- Deployed production release to Netlify (`https://chog-swarm.netlify.app`) with Next.js Runtime v5, bundling SSR functions and Edge middleware.
-- Verified live HTTP 200 responses across all core routes (`/`, `/arena`, `/demo`, `/lab`, `/gauntlet`, `/leaderboard`) and verified Judge Pass authentication unlock flow live in headless browser.
+- Diagnosed Netlify generic 404 on `/arena?tokenId=24` and API routes: Netlify CI GitHub build lacked explicit `@netlify/plugin-nextjs` in `netlify.toml`, publishing raw `.next` directory with 0 functions.
+- Installed `@netlify/plugin-nextjs` v5.16.4 in `devDependencies` and declared `[[plugins]] package = "@netlify/plugin-nextjs"` in `netlify.toml`.
+- Deployed production release (`6adac232e91f4bb48e310129`) with active Next.js SSR functions (`___netlify-server-handler`) and Edge middleware (`___netlify-edge-handler-middleware`).
+- Verified all three live access cases via Playwright against `https://chog-swarm.netlify.app/arena?tokenId=24`:
+  1. Non-holder blocked: `public/screenshots/live-case1-blocked.png`.
+  2. Judge Pass unlocks: `public/screenshots/live-case2-judge.png`.
+  3. Allowlisted wallet unlocks (Creator Pass): `public/screenshots/live-case3-allowlist.png`.
 
 ## 6. Important Decisions
 - **Legacy Peer Deps via `.npmrc`**: Configured `legacy-peer-deps=true` at repo root so Netlify, Railway, and Vercel automated CI/CD pipelines bypass the peer dependency mismatch between wagmi v3 and RainbowKit without mutating application code.
