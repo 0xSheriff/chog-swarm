@@ -8,7 +8,7 @@ import { HalloweenEffects } from '@/components/halloween-effects';
 import { MotionToggle } from '@/components/motion-toggle';
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://chog-swarm.vercel.app'),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://chog-swarm.netlify.app'),
   title: 'Chog Swarm | Autonomous Agent Arena on Monad',
   description: 'Pure deterministic autonomous agent arena where your Chog Genesis NFT identity compiles into on-chain policy. Built for Chogathon 2026.',
   keywords: ['Chog', 'Monad', 'NFT', 'Autonomous Agents', 'Game', 'Deterministic Arena', 'Chogathon'],

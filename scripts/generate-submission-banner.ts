@@ -539,7 +539,7 @@ const htmlContent = `<!DOCTYPE html>
 
       <div class="footer-links">
         <div class="link-pill link-pill-accent">
-          <span>🌐 Play Live: chog-swarm.vercel.app</span>
+          <span>🌐 Play Live: chog-swarm.netlify.app</span>
         </div>
         <div class="link-pill">
           <span>📦 GitHub: 0xSheriff/chog-swarm</span>

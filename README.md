@@ -73,7 +73,7 @@ Create a `.env.local` file or configure your deployment environment:
 NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=c04543160a2b8e8f2efae7b31d044fa9
 
 # Optional custom app URL for Open Graph metadata
-NEXT_PUBLIC_APP_URL=https://chog-swarm.vercel.app
+NEXT_PUBLIC_APP_URL=https://chog-swarm.netlify.app
 
 # Optional Google Cloud / Firebase configuration for cloud Firestore persistence
 # (Falls back automatically to local persistent disk storage in data/leaderboard.json)

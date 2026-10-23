@@ -100,6 +100,9 @@ Chog Swarm is a premium-tier autonomous web game built for Chogathon 2026 (choga
   1. Non-holder blocked: `public/screenshots/live-case1-blocked.png`.
   2. Judge Pass unlocks: `public/screenshots/live-case2-judge.png`.
   3. Allowlisted wallet unlocks (Creator Pass): `public/screenshots/live-case3-allowlist.png`.
+- Replaced all production URLs across codebase, demo compositions, banners, and documentation with `https://chog-swarm.netlify.app` (`chog-swarm.netlify.app`).
+- Re-exported 4K submission banners (`public/submission-banner.png`, `docs/submission-banner.png`) and OpenGraph card (`public/og-image.png`).
+- Executed per-scene re-render pipeline (`scripts/render_and_stitch.py`), preserving Scene 0 bit-identically from `c5a3bad`, re-rendering scenes 1–7, stitching, and remuxing pristine byte-identical audio (`MD5: 6b63217370c67cd91230a7ac20383861`). Verified 100% stutter gate pass (0 gaps > 3 frames across all 10,200 frames) and verified frame diffs outside the URL bounding box match closely (outside MAD < 0.9 across all scenes).
 
 ## 6. Important Decisions
 - **Legacy Peer Deps via `.npmrc`**: Configured `legacy-peer-deps=true` at repo root so Netlify, Railway, and Vercel automated CI/CD pipelines bypass the peer dependency mismatch between wagmi v3 and RainbowKit without mutating application code.
