@@ -152,3 +152,11 @@ Chog Swarm is a premium-tier autonomous web game built for Chogathon 2026 (choga
 - Never write app code before Step 0 completion.
 - No emoji as gameplay icons; use SVGs or custom pixel sprites.
 - Update `memory.md` after every meaningful milestone.
+- **Cloud Deployment Verification**: Cloud platforms (Netlify, Railway, Vercel) clone from GitHub. Always push and verify with a clean fresh clone (`/tmp/gh-clone`) running `npm ci`, build, and tests before claiming a deploy fix is complete.
+- **Long Composition Video Rendering**:
+  - For 60fps compositions exceeding 60s, avoid single monolithic renders that can exhaust RAM and cause swap thrashing.
+  - Render sub-compositions sequentially into isolated files (`/tmp/scene{i}.mp4`) so browser processes release memory between scenes.
+  - Preserve approved, untouched scenes bit-identically (e.g. copy Scene 0 directly from base render without re-encoding).
+  - Stitch video segments using `ffmpeg -f concat -safe 0 -c copy`.
+  - Remux pristine master audio with `ffmpeg -c:v copy -c:a copy` and verify MD5 hash matches byte-for-byte.
+  - Always verify final stitched video with `scripts/check-video-smoothness.py` (0 stalls > 3 frames across all scenes).
