@@ -76,6 +76,7 @@ Chog Swarm is a premium-tier autonomous web game built for Chogathon 2026 (choga
 - Added `.npmrc` with `legacy-peer-deps=true` to resolve npm ERESOLVE peer dependency conflict (`wagmi` 3.7.7 vs `@rainbow-me/rainbowkit` 2.2.11 peer requirement of `wagmi ^2.9.0`) across Netlify, Railway, and Vercel.
 - Added `netlify.toml` configuring build command (`npm run build`), publish directory (`.next`), and `NODE_VERSION = "22"`.
 - Verified end-to-end installation from clean clone (`npm ci`, `npm run build`, `npm test` 21/21 passed) and verified RainbowKit wallet connect modal renders and functions properly.
+- Pushed all commits through `44e39e3` to GitHub `origin master`. Confirmed `.npmrc` is tracked and live on GitHub (`legacy-peer-deps=true`), and verified a fresh clone from GitHub builds and tests cleanly.
 
 ## 6. Important Decisions
 - **Legacy Peer Deps via `.npmrc`**: Configured `legacy-peer-deps=true` at repo root so Netlify, Railway, and Vercel automated CI/CD pipelines bypass the peer dependency mismatch between wagmi v3 and RainbowKit without mutating application code.
