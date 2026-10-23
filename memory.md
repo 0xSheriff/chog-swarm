@@ -73,8 +73,13 @@ Chog Swarm is a premium-tier autonomous web game built for Chogathon 2026 (choga
 - Authored and verified `scripts/check-video-smoothness.py` measuring per-scene frame differences.
 - Rendered final production film `assets/capture/chog-swarm-demo-film.mp4` (170.0s @ 60fps).
 - Exported contact sheets `docs/demo/contact-sheet-scene[0-7].png`.
+- Added `.npmrc` with `legacy-peer-deps=true` to resolve npm ERESOLVE peer dependency conflict (`wagmi` 3.7.7 vs `@rainbow-me/rainbowkit` 2.2.11 peer requirement of `wagmi ^2.9.0`) across Netlify, Railway, and Vercel.
+- Added `netlify.toml` configuring build command (`npm run build`), publish directory (`.next`), and `NODE_VERSION = "22"`.
+- Verified end-to-end installation from clean clone (`npm ci`, `npm run build`, `npm test` 21/21 passed) and verified RainbowKit wallet connect modal renders and functions properly.
 
 ## 6. Important Decisions
+- **Legacy Peer Deps via `.npmrc`**: Configured `legacy-peer-deps=true` at repo root so Netlify, Railway, and Vercel automated CI/CD pipelines bypass the peer dependency mismatch between wagmi v3 and RainbowKit without mutating application code.
+- **RainbowKit Version Policy**: RainbowKit's latest published release on npm is `2.2.11` (which specifies peer `wagmi: ^2.9.0`); no published version on npm supports wagmi v3 yet. We preserve existing working versions and avoid unverified upgrades.
 - **Decoupled Cursor Architecture**: Page cursors are never baked into captured footage; vector cursors are rendered directly in Hyperframes via GSAP, ensuring silky 60fps cursor movement regardless of underlying canvas paint timing.
 - **Fail-Closed Security**: Monad RPC errors fail CLOSED, preventing unauthorized access during network partitions.
 - **Rule A Preservation**: All Chog NFT art displayed byte-exact without tint, blur, crop, or filters.
