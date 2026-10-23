@@ -21,6 +21,20 @@ Chog Swarm is a premium-tier autonomous web game built for Chogathon 2026 (choga
 - **Video Production**: HyperFrames 0.8.186, GSAP 3.14.2, FFmpeg 7.1
 
 ## 4. Current State
+- **NETLIFY PRODUCTION DEPLOYMENT ACTIVE & VERIFIED**:
+  - Production URL: `https://chog-swarm.netlify.app`
+  - Site ID: `90ecd53e-762b-4004-b2d2-2e9d75c49e30` (Site: `chog-swarm`)
+  - Deployed via `@netlify/plugin-nextjs` (Next.js Runtime v5.16.3). Packaged 2,115 static assets, 1 SSR server handler function (`___netlify-server-handler`), and 3 Edge middleware handlers.
+  - Live route HTTP 200 verification:
+    - `/` -> HTTP 200
+    - `/arena` -> HTTP 200
+    - `/demo` -> HTTP 200
+    - `/lab` -> HTTP 200
+    - `/gauntlet` -> HTTP 200
+    - `/leaderboard` -> HTTP 200
+  - Live security verification:
+    - Non-holder wallet blocked with Halloween dark-glass Access Gate on `/arena`.
+    - Judge Pass unlock flow tested end-to-end: POST `/api/auth/judge` issues signed HTTP-only cookie, successfully unlocking Chog #143 simulation, with persistent Judge banner and excluded leaderboard scores.
 - **DEMO FILM STUTTER & DEAD STRETCHES ELIMINATED (100% STUTTER GATE PASS ON ALL 8 SCENES)**:
   - **Final Film Output**: `assets/capture/chog-swarm-demo-film.mp4` (120.3 MB, 170.000s / 2m 50s, 10,200 frames @ 60 FPS, 1920x1080, H.264 High Profile, CRF 16, stereo AAC audio).
   - **Part 1 GPU & Diagnostics**:
@@ -77,6 +91,10 @@ Chog Swarm is a premium-tier autonomous web game built for Chogathon 2026 (choga
 - Added `netlify.toml` configuring build command (`npm run build`), publish directory (`.next`), and `NODE_VERSION = "22"`.
 - Verified end-to-end installation from clean clone (`npm ci`, `npm run build`, `npm test` 21/21 passed) and verified RainbowKit wallet connect modal renders and functions properly.
 - Pushed all commits through `44e39e3` to GitHub `origin master`. Confirmed `.npmrc` is tracked and live on GitHub (`legacy-peer-deps=true`), and verified a fresh clone from GitHub builds and tests cleanly.
+- Handled literal `\n` conversion for Firestore private keys in `lib/leaderboard-store.ts` via branch `netlify-fix` (merged in `9782085`).
+- Configured Netlify build environment (`NPM_CONFIG_LEGACY_PEER_DEPS=true`, site ID: `90ecd53e-762b-4004-b2d2-2e9d75c49e30`).
+- Deployed production release to Netlify (`https://chog-swarm.netlify.app`) with Next.js Runtime v5, bundling SSR functions and Edge middleware.
+- Verified live HTTP 200 responses across all core routes (`/`, `/arena`, `/demo`, `/lab`, `/gauntlet`, `/leaderboard`) and verified Judge Pass authentication unlock flow live in headless browser.
 
 ## 6. Important Decisions
 - **Legacy Peer Deps via `.npmrc`**: Configured `legacy-peer-deps=true` at repo root so Netlify, Railway, and Vercel automated CI/CD pipelines bypass the peer dependency mismatch between wagmi v3 and RainbowKit without mutating application code.
@@ -89,10 +107,10 @@ Chog Swarm is a premium-tier autonomous web game built for Chogathon 2026 (choga
 - None. All 8 scenes pass the Stutter Gate with 0 stalls > 3 frames.
 
 ## 8. Current Task
-- Stutter and dead stretch elimination complete; verified 1080p 60fps film render and contact sheets.
+- Production deployment to Netlify complete and verified; live URL `https://chog-swarm.netlify.app` operational.
 
 ## 9. Next Steps
-- Final review and handoff.
+- Deliver submission banner and finalize hackathon submission questions.
 
 ## 10. Important Files
 - `assets/capture/chog-swarm-demo-film.mp4`: Final production demo video (2:50 @ 60fps).
@@ -101,11 +119,25 @@ Chog Swarm is a premium-tier autonomous web game built for Chogathon 2026 (choga
 - `scripts/record-clean-clips.ts`: Clean 1080p 60fps footage capture pipeline.
 - `docs/demo/contact-sheet-scene[0-7].png`: 8 contact sheets inspecting motion across all scenes.
 - `demo-video/compositions/`: Hyperframes modular compositions.
+- `netlify.toml`: Netlify build and runtime configuration.
+- `.npmrc`: `legacy-peer-deps=true` configuration for cloud builders.
 
 ## 11. Environment & Configuration
-- Monad Testnet / Mainnet RPC endpoints.
-- Chromium with hardware Metal/ANGLE GPU rasterization.
-- HyperFrames 0.8.186.
+- Production Hosting: Netlify (`https://chog-swarm.netlify.app`)
+- Monad RPC: `https://rpc.monad.xyz` (Chain ID 143)
+- Required Environment Variables:
+  - `NPM_CONFIG_LEGACY_PEER_DEPS`
+  - `NEXT_PUBLIC_APP_URL`
+  - `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID`
+  - `MONAD_RPC_URL`
+  - `OWNER_ALLOWLIST`
+  - `JUDGE_CODE`
+  - `SESSION_SECRET`
+  - `PUBLIC_REPLAY`
+  - `PUBLIC_LEADERBOARD_READ`
+  - `FIREBASE_PROJECT_ID`
+  - `FIREBASE_CLIENT_EMAIL`
+  - `FIREBASE_PRIVATE_KEY`
 
 ## 12. Development Rules
 - Maintain documentation integrity.
