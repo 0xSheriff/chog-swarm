@@ -45,3 +45,6 @@ demo-video/.hyperframes/
 .ref_frames/
 .venv/
 assests/
+
+# Local Netlify folder
+.netlify

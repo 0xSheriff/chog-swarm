@@ -25,7 +25,19 @@ const DB_FILE = path.resolve(process.cwd(), 'data/leaderboard.json');
 let firestoreDb: Firestore | null = null;
 try {
   const projectId = process.env.FIREBASE_PROJECT_ID || process.env.GOOGLE_CLOUD_PROJECT || process.env.GCLOUD_PROJECT;
-  if (projectId || process.env.GOOGLE_APPLICATION_CREDENTIALS || process.env.FIRESTORE_EMULATOR_HOST) {
+  const clientEmail = process.env.FIREBASE_CLIENT_EMAIL || process.env.GOOGLE_CLIENT_EMAIL;
+  const rawKey = process.env.FIREBASE_PRIVATE_KEY || process.env.GOOGLE_PRIVATE_KEY;
+  const privateKey = rawKey ? rawKey.replace(/\\n/g, '\n') : undefined;
+
+  if (clientEmail && privateKey) {
+    firestoreDb = new Firestore({
+      projectId: projectId || undefined,
+      credentials: {
+        client_email: clientEmail,
+        private_key: privateKey,
+      },
+    });
+  } else if (projectId || process.env.GOOGLE_APPLICATION_CREDENTIALS || process.env.FIRESTORE_EMULATOR_HOST) {
     firestoreDb = new Firestore({
       projectId: projectId || undefined,
     });
